@@ -1,0 +1,552 @@
+Perhatikan kode migration, model, controller dan view(index,create,edit) ini.
+
+//migration
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('pengguna', function (Blueprint $table) {
+            $table->id('pengguna_id');
+            $table->string('nama', 100);
+            $table->string('email', 100)->unique();
+            $table->string('password');
+            $table->enum('status_akun', ['aktif', 'tidak aktif']);
+            $table->enum('role', ['owner', 'manajer', 'admin']);
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('pengguna');
+    }
+};
+
+//model
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Pengguna extends Model
+{
+    use HasFactory;
+
+    protected $table = 'pengguna';
+
+    protected $primaryKey = 'pengguna_id';
+
+    protected $fillable = [
+        'nama',
+        'email',
+        'password',
+        'status_akun',
+        'role',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    // Relasi dengan tabel pesanan (one to many)
+    public function pesanan()
+    {
+        return $this->hasMany(Pesanan::class, 'dibuat_oleh', 'pengguna_id');
+    }
+}
+
+//controller
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Pengguna;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class PenggunaController extends Controller
+{
+    // Constants for view titles
+    private const TITLE_INDEX = 'Daftar Pengguna';
+    private const TITLE_CREATE = 'Tambah Pengguna';
+    private const TITLE_EDIT = 'Edit Pengguna';
+
+    // Constructor to apply middleware for owner role (if necessary)
+    public function __construct()
+    {
+        // Contoh jika middleware dibutuhkan untuk role "owner"
+        $this->middleware('role:owner')->except(['index']);
+    }
+
+    // Index method (show all users)
+    public function index()
+    {
+        $data = Pengguna::all();
+        return view('menu.pengguna.index', [
+            'data' => $data,
+            'title' => self::TITLE_INDEX
+        ]);
+    }
+
+    // Create method (show form for creating new user)
+    public function create()
+    {
+        return view('menu.pengguna.create', [
+            'title' => self::TITLE_CREATE
+        ]);
+    }
+
+    // Store method (store new user to the database)
+    public function store(Request $request)
+    {
+        $this->validateStoreOrUpdate($request);
+
+        Pengguna::create([
+            'role' => $request->role,
+            'nama' => $request->nama,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'foto' => 'profil.png', // You can adjust the default photo logic if needed
+        ]);
+
+        return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil ditambahkan.');
+    }
+
+    // Edit method (show form for editing user data)
+    public function edit($id)
+    {
+        $pengguna = Pengguna::findOrFail($id);
+
+        return view('menu.pengguna.edit', [
+            'pengguna' => $pengguna,
+            'title' => self::TITLE_EDIT
+        ]);
+    }
+
+    // Update method (update user data in the database)
+    public function update(Request $request, $id)
+    {
+        $this->validateStoreOrUpdate($request, $id);
+
+        $user = Pengguna::findOrFail($id);
+
+        // Set nilai baru dari request
+        $user->role = $request->role;
+        $user->nama = $request->nama;
+        $user->email = $request->email;
+        $user->status_akun = $request->status_akun;
+        $user->password = $request->password ? Hash::make($request->password) : $user->password;
+
+        // Cek apakah ada perubahan
+        if ($user->isDirty()) {
+            $user->save();
+            return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil diedit.');
+        }
+
+        return redirect()->route('owner.pengguna.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
+    }
+
+
+    // Destroy method (delete user)
+    public function destroy($id)
+    {
+        Pengguna::findOrFail($id)->delete();
+        return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
+    }
+
+    // Private method for validation (to avoid duplication of logic)
+    private function validateStoreOrUpdate(Request $request, $id = null)
+    {
+        $rules = [
+            'role' => 'required',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|string|max:255|unique:pengguna,email' . ($id ? ",$id,pengguna_id" : ''),
+            'password' => 'nullable|string|min:8',
+        ];
+
+        $customAttributes = [
+            'role' => 'Role',
+            'nama' => 'Nama Lengkap',
+            'email' => 'Email',
+            'password' => 'Password',
+        ];
+
+        // Validate input with custom attributes
+        return $request->validate($rules, [], $customAttributes);
+    }
+}
+
+//index
+@extends('layout.main')
+@section('content')
+    <main class="page-content">
+
+        <!-- Breadcrumb -->
+        <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"
+            style="height: 37px; overflow: hidden; display: flex; align-items: center;">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('owner.dashboard') }}"><i class="bx bx-home-alt"></i></a>
+                        </li>
+                        <li class="breadcrumb-item" aria-current="page">
+                            <span class="text-dark">Pengguna</span>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="ms-auto">
+                <a href="{{ route('owner.pengguna.create') }}" class="btn btn-primary">
+                    <i class="fadeIn animated bx bx-plus"></i>Tambah
+                </a>
+            </div>
+        </div>
+        <!-- End Breadcrumb -->
+
+        <div class="row ms-0 me-1">
+            <div class="card radius-10 w-100">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <div class="mt-1"></div>
+                        <table id="example" class="table align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>Status Akun</th>
+                                    <th data-sortable="false">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($data as $pengguna)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex">
+                                                <div class="me-3">
+                                                    <img src="{{ url('assets/onedash/images/avatars/user_profil.png') }}"
+                                                        class="rounded-circle" width="50">
+                                                </div>
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0">{{ $pengguna->nama }}</h6>
+                                                    <p class="text-secondary mb-0" style="font-size: 12px">
+                                                        {{ $pengguna->role === 'manajer' ? 'Manajer Produksi' : ucwords(strtolower($pengguna->role)) }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $pengguna->email }}</td>
+                                        <td>
+                                            @if ($pengguna->is_active)
+                                                <span class="badge bg-success px-3 py-2">Aktif</span>
+                                            @else
+                                                <span class="badge bg-danger px-3 py-2">Non-Aktif</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-start justify-content-start gap-3 fs-6">
+                                                <!-- Tombol Edit -->
+                                                <a href="{{ route('owner.pengguna.edit', $pengguna->pengguna_id) }}"
+                                                    class="btn btn-sm btn-warning d-flex align-items-center">
+                                                    <i class="bi bi-pencil-fill me-1"></i> Edit
+                                                </a>
+
+                                                <!-- Tombol Hapus -->
+                                                <button type="button"
+                                                    class="btn btn-sm btn-danger d-flex align-items-center"
+                                                    data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                                                    data-form-id="delete-form-{{ $pengguna->pengguna_id }}">
+                                                    <i class="bi bi-trash-fill me-1"></i> Hapus
+                                                </button>
+
+                                                <!-- Form Hapus -->
+                                                <form id="delete-form-{{ $pengguna->pengguna_id }}"
+                                                    action="{{ route('owner.pengguna.destroy', $pengguna->pengguna_id) }}"
+                                                    method="POST" style="display: none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+@endsection
+@section('script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var deleteButtons = document.querySelectorAll('[data-bs-target="#confirmDeleteModal"]');
+            var confirmDeleteButton = document.getElementById('confirm-delete');
+
+            deleteButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var formId = button.getAttribute('data-form-id');
+                    confirmDeleteButton.setAttribute('data-form-id', formId);
+                });
+            });
+
+            confirmDeleteButton.addEventListener('click', function() {
+                var formId = confirmDeleteButton.getAttribute('data-form-id');
+                document.getElementById(formId).submit();
+            });
+        });
+    </script>
+@endsection
+
+//create
+@extends('layout.main')
+@section('content')
+    <main class="page-content">
+
+        <!-- Breadcrumb -->
+        <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"
+            style="height: 37px; overflow: hidden; display: flex; align-items: center;">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="<?= route('owner.dashboard') ?>"><i class="bx bx-home-alt"></i></a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="<?= route('owner.pengguna.index') ?>">User</a>
+                        </li>
+                        <li class="breadcrumb-item" aria-current="page">
+                            <span class="text-dark">Tambah User</span>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <!-- End Breadcrumb -->
+
+        <div class="row ms-0 me-1">
+            <div class="card radius-10 w-100">
+                <div class="card-body">
+                    <form action="{{ route('owner.pengguna.store') }}" method="POST">
+                        @csrf
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="role">Role</label>
+                            <select id="role" name="role" class="form-select @error('role') is-invalid @enderror">
+                                <option value="">Pilih Role</option>
+                                <option value="manajer" {{ old('role') == 'manjer' ? 'selected' : '' }}>
+                                    Manajer Produksi</option>
+                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            </select>
+                            @error('role')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="nama">Nama</label>
+                            <input type="text" id="nama" name="nama"
+                                class="form-control @error('nama') is-invalid @enderror" value="{{ old('nama') }}"
+                                placeholder="Masukkan nama">
+                            @error('nama')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" name="email"
+                                class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}"
+                                placeholder="Masukkan email">
+                            @error('email')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="password">Password</label>
+                            <input type="password" id="password" name="password"
+                                class="form-control @error('password') is-invalid @enderror"
+                                placeholder="Masukkan password">
+                            @error('password')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="text-end mb-3 mt-4">
+                            <a href="{{ route('owner.pengguna.index') }}" class="btn btn-dark">Kembali</a>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+@endsection
+
+//edit
+@extends('layout.main')
+@section('content')
+    <main class="page-content">
+
+        <!-- Breadcrumb -->
+        <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"
+            style="height: 37px; overflow: hidden; display: flex; align-items: center;">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 p-0">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('owner.dashboard') }}"><i class="bx bx-home-alt"></i></a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('owner.pengguna.index') }}">Pengguna</a>
+                        </li>
+                        <li class="breadcrumb-item" aria-current="page">
+                            <span class="text-dark">Edit Pengguna</span>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <!-- End Breadcrumb -->
+
+        <div class="row ms-0 me-1">
+            <div class="card radius-10 w-100">
+                <div class="card-body">
+                    <form action="{{ route('owner.pengguna.update', $pengguna->pengguna_id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="status_akun">Role</label>
+                            <select id="status_akun" name="status_akun" class="form-select">
+                                <option value="aktif"
+                                    {{ old('status_akun', $pengguna->status_akun) == 'aktif' ? 'selected' : '' }}>
+                                    Aktif
+                                </option>
+                                <option value="tidak aktif"
+                                    {{ old('status_akun', $pengguna->status_akun) == 'tidak aktif' ? 'selected' : '' }}>
+                                    Tidak
+                                    Aktif
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="role">Role</label>
+                            <select id="role" name="role" class="form-select @error('role') is-invalid @enderror">
+                                <option value="">Pilih Role</option>
+                                <option value="manajer" {{ old('role', $pengguna->role) == 'manajer' ? 'selected' : '' }}>
+                                    Manajer Produksi
+                                </option>
+                                <option value="admin" {{ old('role', $pengguna->role) == 'admin' ? 'selected' : '' }}>Admin
+                                </option>
+                            </select>
+                            @error('role')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="nama">Nama</label>
+                            <input type="text" id="nama" name="nama"
+                                class="form-control @error('nama') is-invalid @enderror"
+                                value="{{ old('nama', $pengguna->nama) }}" placeholder="Masukkan Nama">
+                            @error('nama')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" name="email"
+                                class="form-control @error('email') is-invalid @enderror"
+                                value="{{ old('email', $pengguna->email) }}" placeholder="Masukkan email">
+                            @error('email')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="password">
+                                Password
+                            </label>
+                            <input type="password" id="password" name="password"
+                                class="form-control @error('password') is-invalid @enderror"
+                                placeholder="(kosongkan jika tidak ingin merubah)">
+                            @error('password')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
+                        <div class="text-end mb-3 mt-4">
+                            <a href="{{ route('owner.pengguna.index') }}" class="btn btn-dark">Kembali</a>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+@endsection
+@section('script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const noHpInput = document.getElementById('no_hp');
+
+            // Function to format the input value
+            function formatNoHp(value) {
+                // Hanya ambil angka dari input
+                value = value.replace(/\D/g, '');
+
+                // Tambahkan "08" di depan angka jika belum ada
+                if (value.length > 0 && !value.startsWith('08')) {
+                    value = '08' + value;
+                }
+                return value;
+            }
+
+            noHpInput.addEventListener('input', function(e) {
+                e.target.value = formatNoHp(e.target.value);
+            });
+
+            noHpInput.addEventListener('focus', function() {
+                // Tambahkan "08" di depan jika tidak ada angka sama sekali
+                if (noHpInput.value.length > 0 && !noHpInput.value.startsWith('08')) {
+                    noHpInput.value = '08' + noHpInput.value;
+                }
+            });
+
+            // Jika ada nilai default di server-side, tambahkan "08" di depannya
+            if (noHpInput.value && !noHpInput.value.startsWith('08')) {
+                noHpInput.value = '08' + noHpInput.value;
+            }
+        });
+    </script>
+@endsection
