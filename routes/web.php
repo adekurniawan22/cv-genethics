@@ -58,12 +58,6 @@ Route::middleware(['auth.custom'])->group(function () {
 
         Route::resource('owner/penjadwalan', PenjadwalanController::class)->names([
             'index' => 'owner.penjadwalan.index',
-            'create' => 'owner.penjadwalan.create',
-            'store' => 'owner.penjadwalan.store',
-            'show' => 'owner.penjadwalan.show',
-            'edit' => 'owner.penjadwalan.edit',
-            'update' => 'owner.penjadwalan.update',
-            'destroy' => 'owner.penjadwalan.destroy',
         ]);
 
         Route::get('owner/pesanan', [PesananController::class, 'index'])->name('owner.pesanan.index'); // Hanya melihat pesanan
