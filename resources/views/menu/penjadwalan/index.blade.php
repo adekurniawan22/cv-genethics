@@ -18,7 +18,7 @@
                 </nav>
             </div>
             <div class="ms-auto">
-                <a href="{{ route('owner.penjadwalan.create') }}" class="btn btn-primary">
+                <a href="#" class="btn btn-primary">
                     <i class="lni lni-download"></i> Download PDF
                 </a>
             </div>

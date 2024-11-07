@@ -10,6 +10,8 @@
     <link href="<?= url('assets/onedash') ?>/css/bootstrap.min.css" rel="stylesheet" />
     <link href="<?= url('assets/onedash') ?>/css/bootstrap-extended.css" rel="stylesheet" />
     <link href="<?= url('assets/onedash') ?>/css/style.css" rel="stylesheet" />
+    <link href="<?= url('assets/onedash') ?>/plugins/notifications/css/lobibox.min.css" rel="stylesheet" />
+    <link href="<?= url('assets/onedash') ?>/css/icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
 
@@ -110,6 +112,60 @@
     <!--end wrapper-->
 
     <!-- Bootstrap bundle JS -->
+    <script src="<?= url('assets/onedash') ?>/js/jquery.min.js"></script>
+
+    <!--notification js -->
+    <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/lobibox.min.js"></script>
+    <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/notifications.min.js"></script>
+    <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/notification-custom-script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Notification Success
+            @if (session()->has('success'))
+                function notifSuccess() {
+                    Lobibox.notify('success', {
+                        title: 'Berhasil',
+                        pauseDelayOnHover: true,
+                        continueDelayOnInactiveTab: false,
+                        position: 'top right',
+                        icon: 'bx bx-check-circle',
+                        msg: '{{ session('success') }}'
+                    });
+                }
+                notifSuccess();
+            @endif
+
+            // Notification Info
+            @if (session()->has('info'))
+                function notifSuccess() {
+                    Lobibox.notify('info', {
+                        title: 'Info',
+                        pauseDelayOnHover: true,
+                        continueDelayOnInactiveTab: false,
+                        position: 'top right',
+                        icon: 'bx bx-check-circle',
+                        msg: '{{ session('info') }}'
+                    });
+                }
+                notifSuccess();
+            @endif
+
+            // Notification Error
+            @if (session()->has('error'))
+                function notifError() {
+                    Lobibox.notify('error', {
+                        title: 'Gagal',
+                        pauseDelayOnHover: true,
+                        continueDelayOnInactiveTab: false,
+                        position: 'top right',
+                        icon: 'bx bx-x-circle',
+                        msg: '{{ session('error') }}'
+                    });
+                }
+                notifError();
+            @endif
+        });
+    </script>
     <script src="<?= url('assets/onedash') ?>/js/bootstrap.bundle.min.js"></script>
     <!--plugins-->
     <script src="<?= url('assets/onedash') ?>/js/jquery.min.js"></script>

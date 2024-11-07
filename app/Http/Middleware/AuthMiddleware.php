@@ -23,6 +23,6 @@ class AuthMiddleware
         }
 
         // Jika belum login, redirect ke halaman login
-        return redirect()->route('login')->with('error', 'You must be logged in to access this page.');
+        return redirect()->route('login')->with('error', 'Kamu harus login terlebih dahulu');
     }
 }

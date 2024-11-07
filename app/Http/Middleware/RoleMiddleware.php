@@ -20,8 +20,8 @@ class RoleMiddleware
     {
         // Memeriksa apakah role pengguna yang tersimpan di session sesuai dengan role yang diminta
         if (Session::get('role') !== $role) {
-            // Jika tidak sesuai, alihkan ke halaman login dengan pesan error
-            return redirect()->route('login')->with('error', 'Anda tidak memiliki akses.');
+            // Jika tidak sesuai, kembalikan pengguna ke halaman sebelumnya dengan pesan error
+            return back()->with('error', 'Anda tidak memiliki akses ke menu ini');
         }
 
         // Jika role sesuai, lanjutkan request
