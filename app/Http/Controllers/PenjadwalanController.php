@@ -17,18 +17,45 @@ class PenjadwalanController extends Controller
     public function __construct()
     {
         // Contoh jika middleware dibutuhkan untuk role "owner"
-        $this->middleware('role:owner')->except(['index']);
+
     }
 
     // Index method (show all schedules)
     public function index()
     {
+        // Delete all existing Penjadwalan records
+        Penjadwalan::truncate();
+
+        // Retrieve all 'pesanan_id' entries with a status of "pending"
+        $pendingOrders = Pesanan::where('status', 'pending')->pluck('pesanan_id');
+
+        // Get the count of pending orders
+        $countPending = $pendingOrders->count();
+
+        // Create an array of unique, random priorities based on the count of pending orders
+        $priorities = range(1, $countPending);
+        shuffle($priorities); // Randomize the order of priorities
+
+        // Iterate over each pending order and assign a unique random priority
+        foreach ($pendingOrders as $index => $pesanan_id) {
+            Penjadwalan::create([
+                'pesanan_id' => $pesanan_id,
+                'urutan_prioritas' => $priorities[$index], // Assign a unique random priority
+                'estimasi_selesai' => now()->addDays(rand(1, 30)), // Random completion estimate
+            ]);
+        }
+
+        // Fetch the new data with related Pesanan data
         $data = Penjadwalan::with('pesanan')->get();
+
+        // Return the view with the updated data
         return view('menu.penjadwalan.index', [
             'data' => $data,
             'title' => self::TITLE_INDEX
         ]);
     }
+
+
 
     // Create method (show form for creating new schedule)
     public function create()
@@ -51,7 +78,7 @@ class PenjadwalanController extends Controller
             'estimasi_selesai' => $request->estimasi_selesai,
         ]);
 
-        return redirect()->route('owner.penjadwalan.index')->with('success', 'Penjadwalan berhasil ditambahkan.');
+        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil ditambahkan.');
     }
 
     // Edit method (show form for editing schedule data)
@@ -82,10 +109,10 @@ class PenjadwalanController extends Controller
         // Cek apakah ada perubahan
         if ($schedule->isDirty()) {
             $schedule->save();
-            return redirect()->route('owner.penjadwalan.index')->with('success', 'Penjadwalan berhasil diedit.');
+            return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil diedit.');
         }
 
-        return redirect()->route('owner.penjadwalan.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
+        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
     }
 
 
@@ -93,7 +120,7 @@ class PenjadwalanController extends Controller
     public function destroy($id)
     {
         Penjadwalan::findOrFail($id)->delete();
-        return redirect()->route('owner.penjadwalan.index')->with('success', 'Penjadwalan berhasil dihapus.');
+        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil dihapus.');
     }
 
     // Private method for validation (to avoid duplication of logic)

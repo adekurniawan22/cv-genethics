@@ -9,7 +9,7 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0 p-0">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('owner.dashboard') }}"><i class="bx bx-home-alt"></i></a>
+                            <a href="{{ route(session()->get('role') . '.dashboard') }}"><i class="bx bx-home-alt"></i></a>
                         </li>
                         <li class="breadcrumb-item" aria-current="page">
                             <span class="text-dark">Penjahit</span>
@@ -18,7 +18,7 @@
                 </nav>
             </div>
             <div class="ms-auto">
-                <a href="{{ route('owner.penjahit.create') }}" class="btn btn-primary">
+                <a href="{{ route(session()->get('role') . '.penjahit.create') }}" class="btn btn-primary">
                     <i class="fadeIn animated bx bx-plus"></i>Tambah
                 </a>
             </div>
@@ -48,7 +48,7 @@
                                         <td>
                                             <div class="d-flex align-items-start justify-content-start gap-3 fs-6">
                                                 <!-- Tombol Edit -->
-                                                <a href="{{ route('owner.penjahit.edit', $penjahit->penjahit_id) }}"
+                                                <a href="{{ route(session()->get('role') . '.penjahit.edit', $penjahit->penjahit_id) }}"
                                                     class="btn btn-sm btn-warning d-flex align-items-center">
                                                     <i class="bi bi-pencil-fill me-1"></i> Edit
                                                 </a>
@@ -63,7 +63,7 @@
 
                                                 <!-- Form Hapus -->
                                                 <form id="delete-form-{{ $penjahit->penjahit_id }}"
-                                                    action="{{ route('owner.penjahit.destroy', $penjahit->penjahit_id) }}"
+                                                    action="{{ route(session()->get('role') . '.penjahit.destroy', $penjahit->penjahit_id) }}"
                                                     method="POST" style="display: none;">
                                                     @csrf
                                                     @method('DELETE')

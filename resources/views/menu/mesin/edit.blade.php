@@ -9,10 +9,10 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0 p-0">
                         <li class="breadcrumb-item">
-                            <a href="{{ route('owner.dashboard') }}"><i class="bx bx-home-alt"></i></a>
+                            <a href="{{ route(session()->get('role') . '.dashboard') }}"><i class="bx bx-home-alt"></i></a>
                         </li>
                         <li class="breadcrumb-item">
-                            <a href="{{ route('owner.mesin.index') }}">Mesin</a>
+                            <a href="{{ route(session()->get('role') . '.mesin.index') }}">Mesin</a>
                         </li>
                         <li class="breadcrumb-item" aria-current="page">
                             <span class="text-dark">Edit Mesin</span>
@@ -26,7 +26,7 @@
         <div class="row ms-0 me-1">
             <div class="card radius-10 w-100">
                 <div class="card-body">
-                    <form action="{{ route('owner.mesin.update', $mesin->mesin_id) }}" method="POST">
+                    <form action="{{ route(session()->get('role') . '.mesin.update', $mesin->mesin_id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -86,7 +86,7 @@
                         </div>
 
                         <div class="text-end mb-3 mt-4">
-                            <a href="{{ route('owner.mesin.index') }}" class="btn btn-dark">Kembali</a>
+                            <a href="{{ route(session()->get('role') . '.mesin.index') }}" class="btn btn-dark">Kembali</a>
                             <button type="submit" class="btn btn-primary">Simpan</button>
                         </div>
                     </form>

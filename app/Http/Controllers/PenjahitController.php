@@ -41,7 +41,7 @@ class PenjahitController extends Controller
             'kontak' => $request->kontak,
         ]);
 
-        return redirect()->route('owner.penjahit.index')->with('success', 'Penjahit berhasil ditambahkan.');
+        return redirect()->route(session()->get('role') . '.penjahit.index')->with('success', 'Penjahit berhasil ditambahkan.');
     }
 
     // Edit method (show form for editing penjahit data)
@@ -70,10 +70,10 @@ class PenjahitController extends Controller
         // Cek apakah ada perubahan
         if ($penjahit->isDirty()) {
             $penjahit->save();
-            return redirect()->route('owner.penjahit.index')->with('success', 'Penjahit berhasil diedit.');
+            return redirect()->route(session()->get('role') . '.penjahit.index')->with('success', 'Penjahit berhasil diedit.');
         }
 
-        return redirect()->route('owner.penjahit.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
+        return redirect()->route(session()->get('role') . '.penjahit.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
     }
 
 
@@ -81,7 +81,7 @@ class PenjahitController extends Controller
     public function destroy($id)
     {
         Penjahit::findOrFail($id)->delete();
-        return redirect()->route('owner.penjahit.index')->with('success', 'Penjahit berhasil dihapus.');
+        return redirect()->route(session()->get('role') . '.penjahit.index')->with('success', 'Penjahit berhasil dihapus.');
     }
 
     // Private method for validation (to avoid duplication of logic)

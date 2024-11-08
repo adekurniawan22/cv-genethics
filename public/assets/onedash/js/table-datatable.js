@@ -26,7 +26,32 @@ $(function () {
             });
         }
 
-        $("#transaksi-table").DataTable({
+        if (!$.fn.DataTable.isDataTable("#example")) {
+            $("#penjadwalan").DataTable({
+                order: [[2, "asc"]],
+                oLanguage: {
+                    sLengthMenu: "Tampilkan _MENU_ data",
+                    sInfo: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    emptyTable: "Tidak ada data",
+                    zeroRecords: "Tidak ada data yang sesuai dengan pencarian",
+                },
+                lengthMenu: [
+                    [10, 25, 50, -1],
+                    ["10", "25", "50", "Semua"],
+                ],
+                language: {
+                    search: "Cari:",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "<i class='fa fa-angle-right'></i>",
+                        previous: "<i class='fa fa-angle-left'></i>",
+                    },
+                },
+            });
+        }
+
+        $("#id-sembunyi-table").DataTable({
             oLanguage: {
                 sLengthMenu: "Tampilkan _MENU_ data",
                 sInfo: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",

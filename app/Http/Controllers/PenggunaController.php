@@ -17,7 +17,7 @@ class PenggunaController extends Controller
     public function __construct()
     {
         // Contoh jika middleware dibutuhkan untuk role "owner"
-        $this->middleware('role:owner')->except(['index']);
+
     }
 
     // Index method (show all users)
@@ -51,7 +51,7 @@ class PenggunaController extends Controller
             'foto' => 'profil.png', // You can adjust the default photo logic if needed
         ]);
 
-        return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil ditambahkan.');
+        return redirect()->route(session()->get('role') . '.pengguna.index')->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
     // Edit method (show form for editing user data)
@@ -82,10 +82,10 @@ class PenggunaController extends Controller
         // Cek apakah ada perubahan
         if ($user->isDirty()) {
             $user->save();
-            return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil diedit.');
+            return redirect()->route(session()->get('role') . '.pengguna.index')->with('success', 'Pengguna berhasil diedit.');
         }
 
-        return redirect()->route('owner.pengguna.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
+        return redirect()->route(session()->get('role') . '.pengguna.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
     }
 
 
@@ -93,7 +93,7 @@ class PenggunaController extends Controller
     public function destroy($id)
     {
         Pengguna::findOrFail($id)->delete();
-        return redirect()->route('owner.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
+        return redirect()->route(session()->get('role') . '.pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
     }
 
     // Private method for validation (to avoid duplication of logic)

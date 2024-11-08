@@ -61,7 +61,7 @@ class AuthController extends Controller
     protected function redirectBasedOnRole($role)
     {
         if ($role == 'owner') {
-            return redirect()->route('owner.dashboard')->with('success', 'Selamat datang di menu Owner');
+            return redirect()->route(session()->get('role') . '.dashboard')->with('success', 'Selamat datang di menu Owner');
         } elseif ($role == 'manajer') {
             return redirect()->route('manajer.dashboard')->with('success', 'Selamat datang di menu Manajer');
         } elseif ($role == 'admin') {

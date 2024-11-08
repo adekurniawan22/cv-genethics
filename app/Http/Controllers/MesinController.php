@@ -42,7 +42,7 @@ class MesinController extends Controller
             'kapasitas_per_hari' => $request->kapasitas_per_hari,
         ]);
 
-        return redirect()->route('owner.mesin.index')->with('success', 'Mesin berhasil ditambahkan.');
+        return redirect()->route(session()->get('role') . '.mesin.index')->with('success', 'Mesin berhasil ditambahkan.');
     }
 
     // Edit method (show form for editing machine data)
@@ -68,14 +68,14 @@ class MesinController extends Controller
             'kapasitas_per_hari' => $request->kapasitas_per_hari,
         ]);
 
-        return redirect()->route('owner.mesin.index')->with('success', 'Mesin berhasil diedit.');
+        return redirect()->route(session()->get('role') . '.mesin.index')->with('success', 'Mesin berhasil diedit.');
     }
 
     // Destroy method (delete machine)
     public function destroy($id)
     {
         Mesin::findOrFail($id)->delete();
-        return redirect()->route('owner.mesin.index')->with('success', 'Mesin berhasil dihapus.');
+        return redirect()->route(session()->get('role') . '.mesin.index')->with('success', 'Mesin berhasil dihapus.');
     }
 
     // Private method for validation

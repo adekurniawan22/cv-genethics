@@ -41,7 +41,7 @@ class ProdukController extends Controller
             'harga' => $request->harga,
         ]);
 
-        return redirect()->route('owner.produk.index')->with('success', 'Produk berhasil ditambahkan.');
+        return redirect()->route(session()->get('role') . '.produk.index')->with('success', 'Produk berhasil ditambahkan.');
     }
 
     // Edit method (show form for editing product data)
@@ -70,17 +70,17 @@ class ProdukController extends Controller
         // Cek apakah ada perubahan
         if ($produk->isDirty()) {
             $produk->save();
-            return redirect()->route('owner.produk.index')->with('success', 'Produk berhasil diedit.');
+            return redirect()->route(session()->get('role') . '.produk.index')->with('success', 'Produk berhasil diedit.');
         }
 
-        return redirect()->route('owner.produk.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
+        return redirect()->route(session()->get('role') . '.produk.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
     }
 
     // Destroy method (delete product)
     public function destroy($id)
     {
         Produk::findOrFail($id)->delete();
-        return redirect()->route('owner.produk.index')->with('success', 'Produk berhasil dihapus.');
+        return redirect()->route(session()->get('role') . '.produk.index')->with('success', 'Produk berhasil dihapus.');
     }
 
     // Private method for validation (to avoid duplication of logic)
