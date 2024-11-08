@@ -63,7 +63,8 @@
                                 alt="">
                             <div class="d-none d-sm-block">
                                 <p class="user-name mb-0">{{ $pengguna->nama }}</p>
-                                <small class="mb-0 dropdown-user-designation">{{ $pengguna->role }}</small>
+                                <small
+                                    class="mb-0 dropdown-user-designation">{{ ucwords(strtolower($pengguna->role)) }}</small>
                             </div>
                         </div>
                     </a>
