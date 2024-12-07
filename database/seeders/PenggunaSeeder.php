@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 class PenggunaSeeder extends Seeder
@@ -34,7 +33,7 @@ class PenggunaSeeder extends Seeder
                 'nama' => 'Bob Johnson',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
-                'status_akun' => 'tidak aktif',
+                'status_akun' => 'aktif',
                 'role' => 'admin',
                 'created_at' => now(),
                 'updated_at' => now(),
