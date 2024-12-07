@@ -307,11 +307,11 @@ sup {
 	top: -.5em
 }
 a {
-	color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
+	color: #e72e2e;
 	text-decoration: underline
 }
 a:hover {
-	--bs-link-color-rgb: var(--bs-link-hover-color-rgb)
+	color: #f56161;
 }
 a:not([href]):not([class]), a:not([href]):not([class]):hover {
 	color: inherit;

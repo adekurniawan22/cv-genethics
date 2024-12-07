@@ -18,7 +18,7 @@
                 </nav>
             </div>
             <div class="ms-auto">
-                <a href="{{ route(session()->get('role') . '.produk.create') }}" class="btn btn-primary">
+                <a href="{{ route(session()->get('role') . '.produk.create') }}" class="btn btn-danger">
                     <i class="fadeIn animated bx bx-plus"></i>Tambah
                 </a>
             </div>
@@ -49,7 +49,7 @@
                                             <div class="d-flex align-items-start justify-content-start gap-3 fs-6">
                                                 <!-- Tombol Edit -->
                                                 <a href="{{ route(session()->get('role') . '.produk.edit', $produk->produk_id) }}"
-                                                    class="btn btn-sm btn-warning d-flex align-items-center">
+                                                    class="btn btn-sm btn-warning text-white d-flex align-items-center">
                                                     <i class="bi bi-pencil-fill me-1"></i> Edit
                                                 </a>
 

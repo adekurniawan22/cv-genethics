@@ -17,6 +17,10 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::middleware(['role:owner'])->group(function () {
         // Dashboard
         Route::get('owner/dashboard', [DashboardController::class, 'owner'])->name('owner.dashboard');
+        Route::get('owner/dashboard/keuangan/chart-data/{year?}', [DashboardController::class, 'getChartData'])
+            ->name('dashboard.keuangan.chart-data');
+        Route::get('owner/dashboard/keuangan/pdf-report/{year?}', [DashboardController::class, 'generatePdfReport'])
+            ->name('owner.dashboard.keuangan.pdf-report');
 
         // List Pesanan
         Route::get('owner/pesanan', [PesananController::class, 'index'])->name('owner.pesanan.index');
@@ -35,6 +39,10 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::middleware(['role:manajer'])->group(function () {
         // Dashboard
         Route::get('manajer/dashboard', [DashboardController::class, 'manajer'])->name('manajer.dashboard');
+        Route::get('manajer/dashboard/keuangan/chart-data/{year?}', [DashboardController::class, 'getChartData'])
+            ->name('dashboard.keuangan.chart-data');
+        Route::get('manajer/dashboard/keuangan/pdf-report/{year?}', [DashboardController::class, 'generatePdfReport'])
+            ->name('manajer.dashboard.keuangan.pdf-report');
 
         // CRUD Mesin
         Route::get('manajer/mesin', [MesinController::class, 'index'])->name('manajer.mesin.index');
@@ -65,7 +73,14 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/pesanan/{pesanan}/detail', [PesananController::class, 'detail'])->name('manajer.pesanan.detail');
 
         // List Penjadwalan
-        Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])->name('manajer.penjadwalan.index');
+        Route::middleware(['role:manajer'])->group(function () {
+            Route::get('manajer/penjadwalan/{limit?}', [PenjadwalanController::class, 'index'])
+                ->name('manajer.penjadwalan.index')
+                ->where('limit', '[0-9]+');
+        });
+        Route::get('manajer/penjadwalan/pdf/{limit?}', [PenjadwalanController::class, 'downloadPDF'])
+            ->name('manajer.penjadwalan.pdf')
+            ->where('limit', '[0-9]+');
     });
 
     // Routes untuk Admin
@@ -78,6 +93,8 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('admin/pesanan/{pesanan}/detail', [PesananController::class, 'detail'])->name('admin.pesanan.detail');
         Route::get('admin/pesanan/create', [PesananController::class, 'create'])->name('admin.pesanan.create');
         Route::post('admin/pesanan/store', [PesananController::class, 'store'])->name('admin.pesanan.store');
+        Route::get('admin/pesanan/{id}/edit', [PesananController::class, 'edit'])->name('admin.pesanan.edit');
+        Route::put('admin/pesanan/{id}', [PesananController::class, 'update'])->name('admin.pesanan.update');
         Route::delete('admin/pesanan/{id}', [PesananController::class, 'destroy'])->name('admin.pesanan.destroy');
     });
 });

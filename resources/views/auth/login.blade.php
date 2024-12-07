@@ -29,6 +29,46 @@
         <main class="authentication-content pt-0 w-100">
             <div class="authentication-card pt-0 w-100">
                 <div class="container-fluid">
+                    <!-- Modal -->
+                    <div class="modal fade" id="loginAccountModal" tabindex="-1"
+                        aria-labelledby="loginAccountModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="loginAccountModalLabel">Akun Login</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="card w-100 bg-info">
+                                        <div class="card-body">
+                                            <ul>
+                                                <li><strong>Role Owner:</strong>
+                                                    <ul>
+                                                        <li>Email: owner@example.com</li>
+                                                        <li>Password: password</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Role Manajer Produksi:</strong>
+                                                    <ul>
+                                                        <li>Email: manajer@example.com</li>
+                                                        <li>Password: password</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Role Admin:</strong>
+                                                    <ul>
+                                                        <li>Email: admin@example.com</li>
+                                                        <li>Password: password</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card shadow rounded-4 overflow-hidden">
                         <div class="row g-0">
                             <!-- Form and login content -->
@@ -58,7 +98,7 @@
                                                         class="position-absolute top-50 translate-middle-y search-icon px-3">
                                                         <i class="bi bi-person-fill"></i>
                                                     </div>
-                                                    <input type="email"
+                                                    <input type="text"
                                                         class="form-control radius-30 ps-5 @error('email') is-invalid @enderror"
                                                         id="email" placeholder="Masukkan email" name="email"
                                                         value="{{ old('email') }}">
@@ -164,6 +204,11 @@
                 }
                 notifError();
             @endif
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var loginModal = new bootstrap.Modal(document.getElementById('loginAccountModal'));
+            loginModal.show();
         });
     </script>
     <script src="<?= url('assets/onedash') ?>/js/bootstrap.bundle.min.js"></script>

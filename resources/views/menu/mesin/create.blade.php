@@ -82,7 +82,7 @@
 
                         <div class="text-end mb-3 mt-4">
                             <a href="{{ route(session()->get('role') . '.mesin.index') }}" class="btn btn-dark">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="submit" class="btn btn-danger">Simpan</button>
                         </div>
                     </form>
                 </div>

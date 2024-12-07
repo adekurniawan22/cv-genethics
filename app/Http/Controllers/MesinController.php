@@ -85,7 +85,7 @@ class MesinController extends Controller
             'nama_mesin' => 'required|string|max:100',
             'status' => 'required|in:aktif,tidak aktif',
             'keterangan_mesin' => 'nullable|string|max:255',
-            'kapasitas_per_hari' => 'nullable|integer',
+            'kapasitas_per_hari' => 'required|integer',
         ];
 
         $customAttributes = [

@@ -18,7 +18,7 @@
                 </nav>
             </div>
             <div class="ms-auto">
-                <a href="{{ route(session()->get('role') . '.mesin.create') }}" class="btn btn-primary">
+                <a href="{{ route(session()->get('role') . '.mesin.create') }}" class="btn btn-danger">
                     <i class="fadeIn animated bx bx-plus"></i>Tambah
                 </a>
             </div>
@@ -54,7 +54,7 @@
                                         <td>
                                             <div class="d-flex align-items-start justify-content-start gap-3 fs-6">
                                                 <a href="{{ route(session()->get('role') . '.mesin.edit', $mesin->mesin_id) }}"
-                                                    class="btn btn-sm btn-warning d-flex align-items-center">
+                                                    class="btn btn-sm btn-warning text-white d-flex align-items-center">
                                                     <i class="bi bi-pencil-fill me-1"></i> Edit
                                                 </a>
 

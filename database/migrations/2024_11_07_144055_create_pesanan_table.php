@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('pesanan', function (Blueprint $table) {
             $table->id('pesanan_id');
-            $table->enum('status', ['pending', 'selesai']);
+            $table->string('kode_pesanan');
+            $table->enum('status', ['proses', 'selesai']);
             $table->foreignId('dibuat_oleh')->constrained('pengguna', 'pengguna_id')->onDelete('cascade');
             $table->string('channel', 50)->nullable();
             $table->date('tanggal_pesanan');

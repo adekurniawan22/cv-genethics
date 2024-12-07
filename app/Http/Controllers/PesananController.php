@@ -51,8 +51,8 @@ class PesananController extends Controller
     {
         // Validasi data utama pesanan
         $request->validate([
-            'tanggalPengiriman' => 'nullable|date',
-            'status' => 'required|string|in:pending,selesai',
+            'tanggalPengiriman' => 'required|date',
+            'status' => 'required|string|in:proses,selesai',
             'channel' => 'required|string|in:Online,Offline',
             'tanggalPesanan' => 'required|date',
             'produkData' => 'required|array|min:1',
@@ -60,9 +60,21 @@ class PesananController extends Controller
             'produkData.*.jumlah' => 'required|integer|min:1',
         ]);
 
+        // Ambil bulan dan tahun saat ini sesuai zona waktu Indonesia (WIB)
+        $bulan = \Carbon\Carbon::now('Asia/Jakarta')->format('m'); // Bulan dalam format 2 digit
+        $tahun = \Carbon\Carbon::now('Asia/Jakarta')->format('Y'); // Tahun 4 digit
+
+        // Ambil pesanan_id terakhir untuk menghitung ID pesanan selanjutnya
+        $lastPesanan = Pesanan::latest('pesanan_id')->first();
+        $nextPesananId = $lastPesanan ? $lastPesanan->pesanan_id + 1 : 1; // Jika tidak ada pesanan, mulai dari ID 1
+
+        // Membuat kode pesanan dengan format PESANAN/bulan/TAHUN/pesanan_id
+        $kodePesanan = "PESANAN/{$bulan}/{$tahun}/{$nextPesananId}";
+
         // Simpan data utama pesanan
         $pesanan = Pesanan::create([
-            'tanggal_pengiriman' => $request->input('tanggalPengiriman') ?? null,
+            'kode_pesanan' => $kodePesanan, // Simpan kode pesanan
+            'tanggal_pengiriman' => $request->input('tanggalPengiriman'),
             'status' => $request->input('status'),
             'channel' => $request->input('channel'),
             'tanggal_pesanan' => $request->input('tanggalPesanan'),
@@ -80,6 +92,59 @@ class PesananController extends Controller
         );
 
         session()->flash('success', 'Pesanan berhasil ditambahkan.');
+        return response()->json(['success' => true, 'kode_pesanan' => $kodePesanan]);
+    }
+
+
+    public function edit($id)
+    {
+        $pesanan = Pesanan::with('pesananDetails')->findOrFail($id);
+        $products = Produk::all();
+
+        return view('menu.pesanan.edit', [
+            'pesanan' => $pesanan,
+            'title' => self::TITLE_EDIT,
+            'products' => $products,
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Validasi data utama pesanan
+        $request->validate([
+            'tanggalPengiriman' => 'nullable|date',
+            'status' => 'required|string|in:proses,selesai',
+            'channel' => 'required|string|in:Online,Offline',
+            'tanggalPesanan' => 'required|date',
+            'produkData' => 'required|array|min:1',
+            'produkData.*.produk_id' => 'required|exists:produk,produk_id',
+            'produkData.*.jumlah' => 'required|integer|min:1',
+        ]);
+
+        // Temukan pesanan berdasarkan ID
+        $pesanan = Pesanan::findOrFail($id);
+
+        // Update data utama pesanan
+        $pesanan->tanggal_pengiriman = $request->input('tanggalPengiriman');
+        $pesanan->status = $request->input('status');
+        $pesanan->channel = $request->input('channel');
+        $pesanan->tanggal_pesanan = $request->input('tanggalPesanan');
+        $pesanan->save();
+
+        // Hapus detail pesanan yang ada
+        $pesanan->pesananDetails()->delete();
+
+        // Simpan setiap item dari produkData ke tabel PesananDetail melalui relasi
+        $pesanan->pesananDetails()->createMany(
+            collect($request->input('produkData'))->map(function ($item) {
+                return [
+                    'produk_id' => $item['produk_id'],
+                    'jumlah' => $item['jumlah']
+                ];
+            })->toArray()
+        );
+
+        session()->flash('success', 'Pesanan berhasil diperbarui.');
         return response()->json(['success' => true]);
     }
 
@@ -94,40 +159,6 @@ class PesananController extends Controller
             ->get();
         return response()->json($pesananDetail);
     }
-
-    // Edit method (show form for editing user data)
-    // public function edit($id)
-    // {
-    //     $pengguna = Pesanan::findOrFail($id);
-
-    //     return view('menu.pesanan.edit', [
-    //         'pengguna' => $pengguna,
-    //         'title' => self::TITLE_EDIT
-    //     ]);
-    // }
-
-    // // Update method (update user data in the database)
-    // public function update(Request $request, $id)
-    // {
-    //     $this->validateStoreOrUpdate($request, $id);
-
-    //     $user = Pesanan::findOrFail($id);
-
-    //     // Set nilai baru dari request
-    //     $user->role = $request->role;
-    //     $user->nama = $request->nama;
-    //     $user->email = $request->email;
-    //     $user->status_akun = $request->status_akun;
-
-    //     // Cek apakah ada perubahan
-    //     if ($user->isDirty()) {
-    //         $user->save();
-    //         return redirect()->route(session()->get('role') . '.pesanan.index')->with('success', 'Pesanan berhasil diedit.');
-    //     }
-
-    //     return redirect()->route(session()->get('role') . '.pesanan.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
-    // }
-
 
     // Destroy method (delete user)
     public function destroy($id)

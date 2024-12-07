@@ -14,6 +14,7 @@ class Pesanan extends Model
     protected $primaryKey = 'pesanan_id';
 
     protected $fillable = [
+        'kode_pesanan',
         'status',
         'dibuat_oleh',
         'channel',

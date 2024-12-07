@@ -17,7 +17,7 @@
             </div>
             <?php if (session()->get('role') === 'admin') :?>
             <div class="ms-auto">
-                <a href="{{ route(session()->get('role') . '.pesanan.create') }}" class="btn btn-primary">
+                <a href="{{ route(session()->get('role') . '.pesanan.create') }}" class="btn btn-danger">
                     <i class="fadeIn animated bx bx-plus"></i>Tambah
                 </a>
             </div>
@@ -28,6 +28,12 @@
         <div class="row ms-0 me-1">
             <div class="card radius-10 w-100">
                 <div class="card-body">
+                    <div class="mb-4 d-flex gap-2 flex-wrap justify-content-start">
+                        <button id="filter-all" class="btn btn-outline-secondary btn-sm">Semua</button>
+                        <button id="filter-proses" class="btn btn-outline-warning btn-sm">Proses</button>
+                        <button id="filter-selesai" class="btn btn-outline-success btn-sm">Selesai</button>
+                    </div>
+
                     <div class="table-responsive">
                         <table id="id-sembunyi-table" class="table align-middle table-hover" style="width: 99%">
                             <thead class="table-light">
@@ -36,6 +42,7 @@
                                     <th>Kode Pesanan</th>
                                     <th>Status</th>
                                     <th>Tanggal Pesanan</th>
+                                    <th>Tanggal Pengiriman</th>
                                     <th data-sortable="false">Aksi</th>
                                 </tr>
                             </thead>
@@ -44,7 +51,7 @@
                                     <tr>
                                         <td>{{ $pesanan->pesanan_id }}</td>
                                         <td>
-                                            Pesanan#{{ $pesanan->pesanan_id }}
+                                            Pesanan#{{ $pesanan->kode_pesanan }}
                                             <br>
                                             <small class="text-muted">{{ $pesanan->channel }}</small>
                                         </td>
@@ -55,19 +62,29 @@
                                             </span>
                                         </td>
                                         <td>
-                                            {{ $pesanan->tanggal_pesanan ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->format('d/m/Y') : 'Tanggal tidak tersedia' }}
+                                            {{ $pesanan->tanggal_pesanan
+                                                ? \Carbon\Carbon::parse($pesanan->tanggal_pesanan)->locale('id_ID')->isoFormat('D MMMM YYYY')
+                                                : 'Tanggal tidak tersedia' }}
                                         </td>
                                         <td>
+                                            {{ $pesanan->tanggal_pengiriman
+                                                ? \Carbon\Carbon::parse($pesanan->tanggal_pengiriman)->locale('id_ID')->isoFormat('D MMMM YYYY')
+                                                : 'Tanggal tidak tersedia' }}
+                                        </td>
+
+                                        <td>
                                             <div class="d-flex gap-3">
-                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal"
-                                                    data-bs-target="#detailModal"
+                                                <button type="button" class="btn btn-sm btn-info text-white"
+                                                    data-bs-toggle="modal" data-bs-target="#detailModal"
                                                     data-pesanan-id="{{ $pesanan->pesanan_id }}">
-                                                    <i class="bi bi-eye-fill"></i> View
+                                                    <i class="bi bi-eye-fill" style="margin-right: 2px !important"></i>
+                                                    Detail
                                                 </button>
                                                 <?php if (session()->get('role') === 'admin') :?>
-                                                <button class="btn btn-sm btn-warning editPesanan">
-                                                    <i class="bi bi-pencil-fill"></i> Edit
-                                                </button>
+                                                <a href="{{ route(session()->get('role') . '.pesanan.edit', $pesanan->pesanan_id) }}"
+                                                    class="btn btn-sm btn-warning text-white d-flex align-items-center text-white">
+                                                    <i class="bi bi-pencil-fill me-1"></i> Edit
+                                                </a>
                                                 <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                                     data-bs-target="#confirmDeleteModal"
                                                     data-form-id="delete-form-{{ $pesanan->pesanan_id }}">
@@ -139,12 +156,40 @@
                 });
             });
 
+            // Fungsi untuk memformat tanggal ke format Indonesia
+            function formatDateIndonesia(dateString) {
+                const months = {
+                    'January': 'Januari',
+                    'February': 'Februari',
+                    'March': 'Maret',
+                    'April': 'April',
+                    'May': 'Mei',
+                    'June': 'Juni',
+                    'July': 'Juli',
+                    'August': 'Agustus',
+                    'September': 'September',
+                    'October': 'Oktober',
+                    'November': 'November',
+                    'December': 'Desember'
+                };
+
+                const date = new Date(dateString);
+                const day = date.getDate();
+                const monthIndex = date.toLocaleString('en-US', {
+                    month: 'long'
+                });
+                const year = date.getFullYear();
+
+                return `${day} ${months[monthIndex]} ${year}`;
+            }
+
             function fetchPesananDetail(pesananId) {
                 // Ambil role dari session
                 const role = '{{ session()->get('role') }}';
+                const base_url = '{{ url('/') }}';
 
                 // Kirim permintaan Ajax ke server untuk mengambil detail pesanan
-                fetch(`/${role}/pesanan/${pesananId}/detail`)
+                fetch(`${base_url}/${role}/pesanan/${pesananId}/detail`)
                     .then(response => response.json())
                     .then(data => {
                         // Tampilkan data detail pesanan dalam modal
@@ -160,13 +205,14 @@
                             detailHtml += `
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Kode Pesanan:</strong> PESANAN#${pesanan.pesanan_id}</p>
+                                    <p><strong>Kode Pesanan:</strong> PESANAN#${pesanan.kode_pesanan}</p>
                                     <p><strong>Channel:</strong> ${pesanan.channel}</p>
                                     <p><strong>Status:</strong> <span class="badge bg-${pesanan.status == 'selesai' ? 'success' : 'warning'}">${status}</span></p>
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>Dibuat Oleh:</strong> ${pesanan.pengguna.nama}</p>
-                                    <p><strong>Tanggal Pesanan:</strong> ${pesanan.tanggal_pesanan}</p>
+                                    <p><strong>Tanggal Pesanan:</strong> ${formatDateIndonesia(pesanan.tanggal_pesanan)}</p>
+                                    <p><strong>Tanggal Pengiriman:</strong> ${formatDateIndonesia(pesanan.tanggal_pengiriman)}</p>
                                 </div>
                             </div>
                             <hr class="mt-0">
@@ -219,15 +265,6 @@
                     });
             }
 
-        });
-
-        var editPesananButtons = document.querySelectorAll('.editPesanan');
-
-        // Loop through each button and add the event listener
-        editPesananButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                alert('COMING SOON HEHE');
-            });
         });
     </script>
 @endsection

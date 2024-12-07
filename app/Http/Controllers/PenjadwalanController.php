@@ -2,143 +2,270 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Penjadwalan;
 use App\Models\Pesanan;
-use Illuminate\Http\Request;
+use App\Models\Mesin;
+use App\Models\Penjadwalan;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PenjadwalanController extends Controller
 {
-    // Constants for view titles
-    private const TITLE_INDEX = 'Daftar Penjadwalan';
-    private const TITLE_CREATE = 'Tambah Penjadwalan';
-    private const TITLE_EDIT = 'Edit Penjadwalan';
+    const TITLE_INDEX = 'Penjadwalan Produksi';
+    const TITLE_INDEX_PDF = 'PENJADWALAN PRODUKSI';
 
-    // Constructor to apply middleware for owner role (if necessary)
-    public function __construct()
+    // Di Controller
+    public function index($limit = null)
     {
-        // Contoh jika middleware dibutuhkan untuk role "owner"
+        // Ambil limit dari parameter URL atau request, default 5
+        $limit = $limit ?? request('limit', 20);
 
-    }
+        $prosesOrders = Pesanan::with(['pesananDetails.produk'])
+            ->where('status', 'proses')
+            ->take($limit) // Tambahkan limit
+            ->get()
+            ->map(function ($pesanan) {
+                $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
 
-    // Index method (show all schedules)
-    public function index()
-    {
-        // Delete all existing Penjadwalan records
-        Penjadwalan::truncate();
+                $products = $pesanan->pesananDetails->map(function ($detail) {
+                    return [
+                        'produk_id' => $detail->produk_id,
+                        'nama_produk' => $detail->produk->nama_produk,
+                        'jumlah' => $detail->jumlah
+                    ];
+                });
 
-        // Retrieve all 'pesanan_id' entries with a status of "pending"
-        $pendingOrders = Pesanan::where('status', 'pending')->pluck('pesanan_id');
+                return [
+                    'pesanan_id' => $pesanan->pesanan_id,
+                    'channel' => $pesanan->channel,
+                    'kode_pesanan' => $pesanan->kode_pesanan,
+                    'products' => $products,
+                    'total_quantity' => $totalQuantity,
+                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman
+                ];
+            })
+            ->sortBy('tanggal_pengiriman')
+            ->values()
+            ->all();
 
-        // Get the count of pending orders
-        $countPending = $pendingOrders->count();
+        $machines = Mesin::where('status', 'aktif')
+            ->select('mesin_id', 'nama_mesin', 'kapasitas_per_hari')
+            ->get()
+            ->map(function ($mesin) {
+                return [
+                    'mesin_id' => $mesin->mesin_id,
+                    'nama_mesin' => $mesin->nama_mesin,
+                    'kapasitas_per_hari' => $mesin->kapasitas_per_hari
+                ];
+            })
+            ->all();
 
-        // Create an array of unique, random priorities based on the count of pending orders
-        $priorities = range(1, $countPending);
-        shuffle($priorities); // Randomize the order of priorities
+        $schedule = $this->calculateProductionSchedule($prosesOrders, $machines);
 
-        // Iterate over each pending order and assign a unique random priority
-        foreach ($pendingOrders as $index => $pesanan_id) {
-            Penjadwalan::create([
-                'pesanan_id' => $pesanan_id,
-                'urutan_prioritas' => $priorities[$index], // Assign a unique random priority
-                'estimasi_selesai' => now()->addDays(rand(1, 30)), // Random completion estimate
-            ]);
-        }
-
-        // Fetch the new data with related Pesanan data
-        $data = Penjadwalan::with('pesanan')->get();
-
-        // Return the view with the updated data
         return view('menu.penjadwalan.index', [
-            'data' => $data,
-            'title' => self::TITLE_INDEX
-        ]);
-    }
-
-
-
-    // Create method (show form for creating new schedule)
-    public function create()
-    {
-        $orders = Pesanan::all();
-        return view('menu.penjadwalan.create', [
-            'orders' => $orders,
-            'title' => self::TITLE_CREATE
-        ]);
-    }
-
-    // Store method (store new schedule to the database)
-    public function store(Request $request)
-    {
-        $this->validateStoreOrUpdate($request);
-
-        Penjadwalan::create([
-            'pesanan_id' => $request->pesanan_id,
-            'urutan_prioritas' => $request->urutan_prioritas,
-            'estimasi_selesai' => $request->estimasi_selesai,
-        ]);
-
-        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil ditambahkan.');
-    }
-
-    // Edit method (show form for editing schedule data)
-    public function edit($id)
-    {
-        $schedule = Penjadwalan::findOrFail($id);
-        $orders = Pesanan::all();
-
-        return view('menu.penjadwalan.edit', [
             'schedule' => $schedule,
-            'orders' => $orders,
-            'title' => self::TITLE_EDIT
+            'title' => self::TITLE_INDEX,
+            'limit' => $limit
         ]);
     }
 
-    // Update method (update schedule data in the database)
-    public function update(Request $request, $id)
+    public function downloadPDF($limit = null)
     {
-        $this->validateStoreOrUpdate($request, $id);
+        // Ambil limit dari parameter URL atau request, default 5
+        $limit = $limit ?? request('limit', 20);
 
-        $schedule = Penjadwalan::findOrFail($id);
+        // Ambil data schedule seperti di method index
+        $prosesOrders = Pesanan::with(['pesananDetails.produk'])
+            ->where('status', 'proses')
+            ->take($limit) // Tambahkan limit
+            ->get()
+            ->map(function ($pesanan) {
+                $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
 
-        // Set nilai baru dari request
-        $schedule->pesanan_id = $request->pesanan_id;
-        $schedule->urutan_prioritas = $request->urutan_prioritas;
-        $schedule->estimasi_selesai = $request->estimasi_selesai;
+                $products = $pesanan->pesananDetails->map(function ($detail) {
+                    return [
+                        'produk_id' => $detail->produk_id,
+                        'nama_produk' => $detail->produk->nama_produk,
+                        'jumlah' => $detail->jumlah
+                    ];
+                });
 
-        // Cek apakah ada perubahan
-        if ($schedule->isDirty()) {
-            $schedule->save();
-            return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil diedit.');
+                return [
+                    'pesanan_id' => $pesanan->pesanan_id,
+                    'channel' => $pesanan->channel,
+                    'kode_pesanan' => $pesanan->kode_pesanan,
+                    'products' => $products,
+                    'total_quantity' => $totalQuantity,
+                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman
+                ];
+            })
+            ->sortBy('tanggal_pengiriman')
+            ->values()
+            ->all();
+
+        $machines = Mesin::where('status', 'aktif')
+            ->select('mesin_id', 'nama_mesin', 'kapasitas_per_hari')
+            ->get()
+            ->map(function ($mesin) {
+                return [
+                    'mesin_id' => $mesin->mesin_id,
+                    'nama_mesin' => $mesin->nama_mesin,
+                    'kapasitas_per_hari' => $mesin->kapasitas_per_hari
+                ];
+            })
+            ->all();
+
+        $schedule = $this->calculateProductionSchedule($prosesOrders, $machines);
+        $jumlahSchedule = count($prosesOrders); // Gantilah 'property' dengan properti yang sesuai
+
+
+        // Generate PDF
+        $pdf = PDF::loadView('menu.penjadwalan.pdf', [
+            'schedule' => $schedule,
+            'title' => self::TITLE_INDEX_PDF,
+            'tanggal' => $this->formatDateInIndonesian(now()),
+            'limit' => $limit,
+            'jumlahSchedule' => $jumlahSchedule,
+        ]);
+
+        return $pdf->stream('penjadwalan_produksi_' . $limit . '_data_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    private function translateMonthToIndonesian($month)
+    {
+        $months = [
+            'January' => 'Januari',
+            'February' => 'Februari',
+            'March' => 'Maret',
+            'April' => 'April',
+            'May' => 'Mei',
+            'June' => 'Juni',
+            'July' => 'Juli',
+            'August' => 'Agustus',
+            'September' => 'September',
+            'October' => 'Oktober',
+            'November' => 'November',
+            'December' => 'Desember'
+        ];
+
+        return $months[$month] ?? $month;
+    }
+
+    private function formatDateInIndonesian($date)
+    {
+        $formattedDate = $date->format('d/F/Y');
+        $parts = explode('/', $formattedDate);
+        $parts[1] = $this->translateMonthToIndonesian($parts[1]);
+        return implode(' ', $parts);
+    }
+
+    private function calculateProductionSchedule($orders, $machines)
+    {
+        $schedule = [];
+        $globalCurrentDate = now()->startOfDay();
+        $machineCapacityTracker = [];
+
+        foreach ($orders as $order) {
+            $remainingItems = $order['total_quantity'];
+            $startProdDate = null;
+            $machineUsage = [];
+            $completionTime = 0;
+
+            while ($remainingItems > 0) {
+                if ($globalCurrentDate->dayOfWeek !== 0) {
+                    $dateKey = $this->formatDateInIndonesian($globalCurrentDate);
+
+                    if (!isset($machineCapacityTracker[$dateKey])) {
+                        $machineCapacityTracker[$dateKey] = array_fill_keys(
+                            array_column($machines, 'mesin_id'),
+                            0
+                        );
+                    }
+
+                    foreach ($machines as $machine) {
+                        if ($machineCapacityTracker[$dateKey][$machine['mesin_id']] >= $machine['kapasitas_per_hari']) {
+                            continue;
+                        }
+
+                        if (!$startProdDate) {
+                            $startProdDate = clone $globalCurrentDate;
+                        }
+
+                        $availableCapacity = $machine['kapasitas_per_hari'] - $machineCapacityTracker[$dateKey][$machine['mesin_id']];
+                        $itemsToProcess = min($remainingItems, $availableCapacity);
+
+                        if ($itemsToProcess > 0) {
+                            $remainingItems -= $itemsToProcess;
+                            $machineCapacityTracker[$dateKey][$machine['mesin_id']] += $itemsToProcess;
+
+                            if (!isset($machineUsage[$dateKey])) {
+                                $machineUsage[$dateKey] = [];
+                            }
+
+                            $machineUsage[$dateKey][] = [
+                                'mesin_id' => $machine['mesin_id'],
+                                'nama_mesin' => $machine['nama_mesin'],
+                                'kapasitas_terpakai' => $itemsToProcess
+                            ];
+
+                            if ($remainingItems <= 0) {
+                                $endProdDate = clone $globalCurrentDate;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isset($machineUsage[$dateKey])) {
+                        $completionTime++;
+                    }
+                }
+
+                if ($remainingItems > 0) {
+                    $globalCurrentDate->addDay();
+                }
+            }
+
+            // Format tanggal mulai dan selesai dalam bahasa Indonesia
+            $startDateFormatted = $this->formatDateInIndonesian($startProdDate);
+            $endDateFormatted = $this->formatDateInIndonesian($endProdDate);
+
+            // Format completion time dengan jumlah hari yang dibutuhkan
+            $formattedCompletionTime = $startDateFormatted;
+            if ($completionTime > 1) {
+                $formattedCompletionTime .= " - " . $endDateFormatted;
+            }
+
+            // Hitung keterlambatan
+            $dueDate = Carbon::parse($order['tanggal_pengiriman']);
+            $completionDateCarbon = clone $endProdDate;
+
+            $latenessDate = null;
+            $latenessDays = 0; // Default to 0 if there's no lateness
+
+            if ($completionDateCarbon->gt($dueDate)) {
+                // Format lateness date and calculate lateness days in Indonesian
+                $latenessDate = $this->formatDateInIndonesian($completionDateCarbon);
+                $latenessDays = $completionDateCarbon->diffInDays($dueDate); // Calculate days of lateness
+            }
+
+            $schedule[] = [
+                'pesanan_id' => $order['pesanan_id'],
+                'kode_pesanan' => $order['kode_pesanan'],
+                'products' => $order['products'],
+                'channel' => $order['channel'],
+                'tanggal_pengiriman_asli' => $this->formatDateInIndonesian(Carbon::parse($order['tanggal_pengiriman'])),
+                'batas_hari_pengiriman' => Carbon::now()->diffInDays(Carbon::parse($order['tanggal_pengiriman'])),
+                'completion_time' => [
+                    'tanggal' => $formattedCompletionTime,
+                    'hari' => $completionTime,
+                ],  // Number of days it took to complete all items
+                'keterlambatan' => [
+                    'tanggal' => $latenessDate,    // The lateness date (if any)
+                    'hari' => $latenessDays,      // Number of lateness days (if any)
+                ],
+                'penggunaan_mesin' => $machineUsage
+            ];
         }
 
-        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
-    }
-
-
-    // Destroy method (delete schedule)
-    public function destroy($id)
-    {
-        Penjadwalan::findOrFail($id)->delete();
-        return redirect()->route(session()->get('role') . '.penjadwalan.index')->with('success', 'Penjadwalan berhasil dihapus.');
-    }
-
-    // Private method for validation (to avoid duplication of logic)
-    private function validateStoreOrUpdate(Request $request, $id = null)
-    {
-        $rules = [
-            'pesanan_id' => 'required|exists:pesanan,pesanan_id',
-            'urutan_prioritas' => 'required|integer|min:1',
-            'estimasi_selesai' => 'required|date',
-        ];
-
-        $customAttributes = [
-            'pesanan_id' => 'Pesanan',
-            'urutan_prioritas' => 'Urutan Prioritas',
-            'estimasi_selesai' => 'Estimasi Selesai',
-        ];
-
-        // Validate input with custom attributes
-        return $request->validate($rules, [], $customAttributes);
+        return $schedule;
     }
 }

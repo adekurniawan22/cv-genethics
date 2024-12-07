@@ -31,7 +31,7 @@
                                     <div class="card-body rounded bg-secondary text-white">
                                         <div class="mb-3">
                                             <label for="channel" class="form-label">Channel</label>
-                                            <select name="channel" id="channel" class="form-select" required>
+                                            <select name="channel" id="channel" class="form-select">
                                                 <option value="">Pilih Channel</option>
                                                 <option value="Online">Online</option>
                                                 <option value="Offline">Offline</option>
@@ -56,8 +56,8 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="status" class="form-label">Status</label>
-                                            <select name="status" id="status" class="form-select" required>
-                                                <option value="pending" selected>Pending</option>
+                                            <select name="status" id="status" class="form-select">
+                                                <option value="proses" selected>Proses</option>
                                                 <option value="selesai">Selesai</option>
                                             </select>
                                         </div>
@@ -79,8 +79,7 @@
                                             <tbody id="detailPesanan">
                                                 <tr>
                                                     <td>
-                                                        <select name="produk_id[]" class="form-select produk-select"
-                                                            required>
+                                                        <select name="produk_id[]" class="form-select produk-select">
                                                             <option value="">Pilih Produk</option>
                                                             @foreach ($products as $product)
                                                                 <option value="{{ $product->id }}">
@@ -90,8 +89,8 @@
                                                         </select>
                                                     </td>
                                                     <td>
-                                                        <input type="number" name="jumlah[]" class="form-control"
-                                                            min="1" required>
+                                                        <input type="number" name="jumlah[]"
+                                                            class="form-control jumlah-input" min="1">
                                                     </td>
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-danger removeRow"
@@ -102,7 +101,7 @@
                                                 </tr>
                                             </tbody>
                                         </table>
-                                        <button type="button" class="btn btn-sm btn-primary" id="addRow">
+                                        <button type="button" class="btn btn-sm btn-danger" id="addRow">
                                             <i class="bi bi-plus-circle"></i> Tambah Produk
                                         </button>
                                     </div>
@@ -113,7 +112,7 @@
                         <div class="text-end mb-2 mt-4">
                             <a href="{{ route(session()->get('role') . '.pesanan.index') }}"
                                 class="btn btn-dark">Kembali</a>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="submit" class="btn btn-danger">Simpan</button>
                         </div>
                         </form>
                     </div>
@@ -126,11 +125,28 @@
 
 @section('script')
     <script>
+        function addErrorMessage(element, message) {
+            let errorElement = element.parentNode.querySelector('.invalid-feedback');
+            if (!errorElement) {
+                errorElement = document.createElement('div');
+                errorElement.className = 'invalid-feedback';
+                element.parentNode.insertBefore(errorElement, element.nextSibling);
+            }
+            errorElement.textContent = message;
+            errorElement.style.display = 'block'; // Pastikan invalid feedback ditampilkan
+        }
+
+        function removeErrorMessage(element) {
+            const errorElement = element.parentNode.querySelector('.invalid-feedback');
+            if (errorElement) {
+                errorElement.style.display = 'none'; // Atau gunakan kelas CSS yang menyembunyikan elemen
+                errorElement.remove();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const addRowButton = document.getElementById('addRow');
             const detailPesananBody = document.getElementById('detailPesanan');
-            const toggleTanggalPengiriman = document.getElementById('toggleTanggalPengiriman');
-            const tanggalPengirimanWrapper = document.getElementById('tanggalPengirimanWrapper');
 
             // Tampilkan atau sembunyikan input tanggal pengiriman
             toggleTanggalPengiriman.addEventListener('change', function() {
@@ -167,7 +183,7 @@
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
                     <td>
-                        <select name="produk_id[]" class="form-select produk-select" required>
+                        <select name="produk_id[]" class="form-select produk-select" >
                             <option value="">Pilih Produk</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}">{{ $product->nama_produk }}</option>
@@ -175,7 +191,7 @@
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="jumlah[]" class="form-control" min="1" required>
+                        <input type="number" name="jumlah[]" class="form-control jumlah-input" min="1" >
                     </td>
                     <td>
                         <button type="button" class="btn btn-sm btn-danger removeRow">
@@ -185,7 +201,6 @@
                 `;
                 detailPesananBody.appendChild(newRow);
             }
-
 
             function updateProdukOptions() {
                 const selectedProducts = Array.from(detailPesananBody.querySelectorAll('.produk-select'))
@@ -231,70 +246,142 @@
         });
 
         document.getElementById('pesananForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Mencegah pengiriman form default
+            event.preventDefault();
 
-            const csrfToken = document.querySelector('input[name="_token"]').value;
-            // Mendapatkan data produk dari tabel detail pesanan
+            const channel = document.getElementById('channel');
+            const tanggalPesanan = document.getElementById('tanggal_pesanan');
+            const tanggalPengiriman = document.getElementById('tanggal_pengiriman');
+            const status = document.getElementById('status');
+            console.log(tanggalPesanan)
+
+            let isValid = true;
+
+            if (!channel.value) {
+                addErrorMessage(channel, 'Harap pilih channel.');
+                isValid = false;
+            } else {
+                removeErrorMessage(channel);
+            }
+
+            if (!tanggalPesanan.value) {
+                addErrorMessage(tanggalPesanan, 'Harap isi tanggal pesanan.');
+                isValid = false;
+            } else {
+                removeErrorMessage(tanggalPesanan);
+            }
+
+            if (toggleTanggalPengiriman.checked && !tanggalPengiriman.value) {
+                addErrorMessage(tanggalPengiriman, 'Harap isi tanggal pengiriman jika checkbox dicentang.');
+                isValid = false;
+            } else {
+                removeErrorMessage(tanggalPengiriman);
+            }
+
+            if (!status.value) {
+                addErrorMessage(status, 'Harap pilih status.');
+                isValid = false;
+            } else {
+                removeErrorMessage(status);
+            }
+
             const detailPesananBody = document.getElementById('detailPesanan');
-            const rows = detailPesananBody.querySelectorAll('tr');
-            const produkData = [];
+            const detailPesananRows = detailPesananBody.querySelectorAll('tr');
+            detailPesananRows.forEach(function(row) {
+                const produkSelect = row.querySelector('.produk-select');
+                const jumlahInput = row.querySelector('.jumlah-input');
 
-            // Mengiterasi setiap baris di dalam tabel untuk mengumpulkan produk_id dan jumlah
-            rows.forEach(row => {
-                const produkId = row.querySelector('select[name="produk_id[]"]').value;
-                const jumlah = row.querySelector('input[name="jumlah[]"]').value;
+                if (!produkSelect.value) {
+                    addErrorMessage(produkSelect, 'Harap pilih produk.');
+                    isValid = false;
+                } else {
+                    removeErrorMessage(produkSelect);
+                }
 
-                // Debugging per baris
-                console.log(`Produk ID: ${produkId}, Jumlah: ${jumlah}`);
-
-                // Menambahkan data produk hanya jika valid
-                if (produkId && jumlah) {
-                    produkData.push({
-                        produk_id: produkId,
-                        jumlah: jumlah
-                    });
+                if (!jumlahInput.value || parseInt(jumlahInput.value) < 1) {
+                    addErrorMessage(jumlahInput, 'Harap masukkan jumlah yang valid.');
+                    isValid = false;
+                } else {
+                    removeErrorMessage(jumlahInput);
                 }
             });
 
-            // Mengumpulkan data lainnya dari form
-            const formData = new FormData(this);
-            const tanggalPengiriman = formData.get('tanggal_pengiriman');
-            const status = formData.get('status');
-            const channel = formData.get('channel');
-            const tanggalPesanan = formData.get('tanggal_pesanan');
+            if (isValid) {
 
-            // Gabungkan semua data yang akan dikirim
-            const formDataObj = {
-                produkData: produkData,
-                tanggalPengiriman: tanggalPengiriman,
-                status: status,
-                channel: channel,
-                tanggalPesanan: tanggalPesanan
-            };
+                const csrfToken = document.querySelector('input[name="_token"]').value;
+                // Mendapatkan data produk dari tabel detail pesanan
+                const detailPesananBody = document.getElementById('detailPesanan');
+                const rows = detailPesananBody.querySelectorAll('tr');
+                const produkData = [];
 
-            // Mengirim data ke server melalui AJAX menggunakan fetch
-            fetch("{{ route(session()->get('role') . '.pesanan.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: JSON.stringify(formDataObj)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href =
-                            "{{ route(session()->get('role') . '.pesanan.index') }}"; // Session 'success_message' akan tersedia di halaman tujuan
-                    } else {
-                        alert("Gagal menyimpan data pesanan.");
+                // Mengiterasi setiap baris di dalam tabel untuk mengumpulkan produk_id dan jumlah
+                rows.forEach(row => {
+                    const produkId = row.querySelector('select[name="produk_id[]"]').value;
+                    const jumlah = row.querySelector('input[name="jumlah[]"]').value;
+
+                    // Debugging per baris
+                    console.log(`Produk ID: ${produkId}, Jumlah: ${jumlah}`);
+
+                    // Menambahkan data produk hanya jika valid
+                    if (produkId && jumlah) {
+                        produkData.push({
+                            produk_id: produkId,
+                            jumlah: jumlah
+                        });
                     }
-                })
-
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("Terjadi kesalahan dalam menyimpan data.");
                 });
+
+                // Mengumpulkan data lainnya dari form
+                const formData = new FormData(this);
+                const status = formData.get('status');
+                const channel = formData.get('channel');
+                const tanggalPesanan = formData.get('tanggal_pesanan');
+                const toggleTanggalPengirimanChecked = document.getElementById('toggleTanggalPengiriman').checked;
+                let tanggalPengiriman;
+
+                if (toggleTanggalPengirimanChecked) {
+                    // If checkbox is checked, use the input value
+                    tanggalPengiriman = formData.get('tanggal_pengiriman');
+                } else {
+                    // If checkbox is not checked, calculate date + 9 days from tanggal_pesanan
+                    const tanggalPesanan = new Date(formData.get('tanggal_pesanan'));
+                    const calculatedDate = new Date(tanggalPesanan);
+                    calculatedDate.setDate(calculatedDate.getDate() + 9);
+                    tanggalPengiriman = calculatedDate.toISOString().split('T')[0];
+                }
+
+                // Gabungkan semua data yang akan dikirim
+                const formDataObj = {
+                    produkData: produkData,
+                    tanggalPengiriman: tanggalPengiriman,
+                    status: status,
+                    channel: channel,
+                    tanggalPesanan: tanggalPesanan
+                };
+
+                // Mengirim data ke server melalui AJAX menggunakan fetch
+                fetch("{{ route(session()->get('role') . '.pesanan.store') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        body: JSON.stringify(formDataObj)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href =
+                                "{{ route(session()->get('role') . '.pesanan.index') }}"; // Session 'success_message' akan tersedia di halaman tujuan
+                        } else {
+                            alert("Gagal menyimpan data pesanan.");
+                        }
+                    })
+
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("Terjadi kesalahan dalam menyimpan data.");
+                    });
+            }
         });
     </script>
 @endsection

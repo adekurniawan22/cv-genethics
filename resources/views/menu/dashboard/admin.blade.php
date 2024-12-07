@@ -28,7 +28,7 @@
                                 masuk dan memastikan
                                 kelancaran operasional.
                             </p>
-                            <a href="{{ route('admin.pesanan.index') }}" class="btn btn-primary">
+                            <a href="{{ route('admin.pesanan.index') }}" class="btn btn-danger">
                                 <i class="bx bx-package"></i> Kelola Pesanan
                             </a>
                         </div>

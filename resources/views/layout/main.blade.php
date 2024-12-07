@@ -126,7 +126,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <a href="{{ route('logout') }}" type="button" id="confirm-delete"
-                            class="btn btn-primary">Ya</a>
+                            class="btn btn-danger">Ya</a>
                     </div>
                 </div>
             </div>

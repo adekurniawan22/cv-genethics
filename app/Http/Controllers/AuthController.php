@@ -25,23 +25,28 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $customMessages = [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+        ];
+
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
-        ]);
+            'password' => 'required',
+        ], $customMessages);
 
         $user = Pengguna::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Email atau password salah']);
+                ->withInput($request->only('email', 'password'));
         }
 
-        if (!$user->status_akun == "aktif") {
+        if ($user->status_akun != "aktif") {
             return redirect()->back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Akun tidak aktif']);
+                ->withInput($request->only('email', 'password'))
+                ->with('error', 'Akun anda tidak aktif');;
         }
 
         // Set session untuk pengguna dan role
@@ -51,10 +56,13 @@ class AuthController extends Controller
         return $this->redirectBasedOnRole($user->role);
     }
 
+
     public function logout()
     {
-        Session::flush();
-        return redirect()->route('login');
+        // Hapus sesi yang dimasukkan saat login saja
+        Session::forget('pengguna_id');
+        Session::forget('role');
+        return redirect()->route('login')->with('success', 'Anda berhasil logout');
     }
 
     // Arahkan berdasarkan role pengguna
