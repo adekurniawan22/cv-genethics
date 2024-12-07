@@ -206,7 +206,8 @@
         // Fetch and update chart data
         async function fetchChartData(year) {
             try {
-                const response = await fetch(`/manajer/dashboard/keuangan/chart-data?year=${year}`);
+                const base_url = '{{ url('/') }}';
+                const response = await fetch(`${base_url}/manajer/dashboard/keuangan/chart-data?year=${year}`);
                 const data = await response.json();
                 console.log(data)
                 updateCharts(data);
