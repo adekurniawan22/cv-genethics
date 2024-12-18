@@ -38,6 +38,13 @@ class ProdukSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'nama_produk' => 'Baju Bola',
+                'keterangan_produk' => 'Mancjester United',
+                'harga' => 120000,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }
