@@ -52,10 +52,10 @@
                 </a>
             </li>
 
-            <li class="{{ Request::is('manajer/penjahit*') ? 'mm-active' : '' }}">
-                <a href="<?= url('manajer/penjahit') ?>">
-                    <div class="parent-icon"><i class="bi bi-person-fill"></i></div>
-                    <div class="menu-title">Penjahit</div>
+            <li class="{{ Request::is('manajer/hari-libur*') ? 'mm-active' : '' }}">
+                <a href="<?= url('manajer/hari-libur') ?>">
+                    <div class="parent-icon"><i class="bi bi-calendar-date-fill"></i></div>
+                    <div class="menu-title">Hari Libur</div>
                 </a>
             </li>
 

@@ -33,10 +33,4 @@ class Pesanan extends Model
     {
         return $this->hasMany(PesananDetail::class, 'pesanan_id', 'pesanan_id');
     }
-
-    // Relasi dengan penjadwalan (one to one)
-    public function penjadwalan()
-    {
-        return $this->hasOne(Penjadwalan::class, 'pesanan_id', 'pesanan_id');
-    }
 }

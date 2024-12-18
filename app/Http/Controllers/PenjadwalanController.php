@@ -4,24 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
 use App\Models\Mesin;
+use App\Models\HariLibur;
 use App\Models\Penjadwalan;
+use App\Models\PesananDetail;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class PenjadwalanController extends Controller
 {
     const TITLE_INDEX = 'Penjadwalan Produksi';
     const TITLE_INDEX_PDF = 'PENJADWALAN PRODUKSI';
 
-    // Di Controller
-    public function index($limit = null)
+    public function index(Request $request)
     {
-        // Ambil limit dari parameter URL atau request, default 5
-        $limit = $limit ?? request('limit', 20);
+        $dateMulai = $request->input('date', Carbon::now('Asia/Jakarta')->format('Y-m-d'));
+        $limit = $request->input('limit', 50);
 
         $prosesOrders = Pesanan::with(['pesananDetails.produk'])
             ->where('status', 'proses')
-            ->take($limit) // Tambahkan limit
+            ->take($limit)
             ->get()
             ->map(function ($pesanan) {
                 $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
@@ -59,24 +61,74 @@ class PenjadwalanController extends Controller
             })
             ->all();
 
-        $schedule = $this->calculateProductionSchedule($prosesOrders, $machines);
+        $schedule = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
+        $schedule2 = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
+
+        $uniqueDates = [];
+        $uniqueProducts = [];
+        foreach ($schedule as $mesinData) {
+            foreach ($mesinData['produk'] as $produkData) {
+                $uniqueDates = array_merge(
+                    $uniqueDates,
+                    array_keys($produkData['tanggal_produksi']),
+                );
+
+                if (!isset($uniqueProducts[$produkData['produk_id']])) {
+                    $uniqueProducts[$produkData['produk_id']] = [
+                        'nama_produk' => $produkData['nama_produk'],
+                        'total_item' => 0
+                    ];
+                }
+                $uniqueProducts[$produkData['produk_id']]['total_item'] += $produkData['total_item'];
+            }
+        }
+
+
+        $uniqueDates = array_unique($uniqueDates);
+        $uniqueDatesFormatted = array_map(function ($date) {
+            return Carbon::createFromFormat('d F Y', $date)->format('Y-m-d');
+        }, $uniqueDates);
+
+        sort($uniqueDatesFormatted);
+
+        $uniqueDates = array_map(function ($date) {
+            return Carbon::parse($date)->format('d F Y');
+        }, $uniqueDatesFormatted);
+
+        // dd($uniqueDates);
+        $startDate = Carbon::parse(min($uniqueDatesFormatted));
+        $endDate = Carbon::parse(max($uniqueDatesFormatted));
+
+        $allDates = [];
+        while ($startDate <= $endDate) {
+            $allDates[] = $startDate->format('d F Y');
+            $startDate->addDay();
+        }
+
+        $hariLibur = HariLibur::select('tanggal', 'keterangan')
+            ->get()
+            ->pluck('keterangan', 'tanggal')
+            ->toArray();
 
         return view('menu.penjadwalan.index', [
             'schedule' => $schedule,
+            'schedule2' => $schedule2,
+            'uniqueDates' => $uniqueDates,
+            'uniqueProducts' => $uniqueProducts,
+            'allDates' => $allDates,
+            'hariLibur' => $hariLibur,
             'title' => self::TITLE_INDEX,
             'limit' => $limit
         ]);
     }
 
-    public function downloadPDF($limit = null)
+    public function downloadPDF(Request $request)
     {
-        // Ambil limit dari parameter URL atau request, default 5
-        $limit = $limit ?? request('limit', 20);
-
-        // Ambil data schedule seperti di method index
+        $dateMulai = $request->input('date', Carbon::now('Asia/Jakarta')->format('Y-m-d'));
+        $limit = $request->input('limit', 50);
         $prosesOrders = Pesanan::with(['pesananDetails.produk'])
             ->where('status', 'proses')
-            ->take($limit) // Tambahkan limit
+            ->take($limit)
             ->get()
             ->map(function ($pesanan) {
                 $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
@@ -114,18 +166,84 @@ class PenjadwalanController extends Controller
             })
             ->all();
 
-        $schedule = $this->calculateProductionSchedule($prosesOrders, $machines);
-        $jumlahSchedule = count($prosesOrders); // Gantilah 'property' dengan properti yang sesuai
+        $schedule = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
+        $schedule2 = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
+        $jumlahSchedule = count($prosesOrders);
 
+        if (count($schedule) > 0 && count($schedule2) > 0) {
+            $uniqueDates = [];
+            $uniqueProducts = [];
+            foreach ($schedule2 as $mesinData) {
+                foreach ($mesinData['produk'] as $produkData) {
+                    $uniqueDates = array_merge(
+                        $uniqueDates,
+                        array_keys($produkData['tanggal_produksi']),
+                    );
 
-        // Generate PDF
-        $pdf = PDF::loadView('menu.penjadwalan.pdf', [
-            'schedule' => $schedule,
-            'title' => self::TITLE_INDEX_PDF,
-            'tanggal' => $this->formatDateInIndonesian(now()),
-            'limit' => $limit,
-            'jumlahSchedule' => $jumlahSchedule,
-        ]);
+                    if (!isset($uniqueProducts[$produkData['produk_id']])) {
+                        $uniqueProducts[$produkData['produk_id']] = [
+                            'nama_produk' => $produkData['nama_produk'],
+                            'total_item' => 0
+                        ];
+                    }
+                    $uniqueProducts[$produkData['produk_id']]['produk_detail_id'] = $produkData['produk_detail_id'];
+                    $uniqueProducts[$produkData['produk_id']]['total_item'] += $produkData['total_item'];
+                }
+            }
+            $uniqueDates = array_unique($uniqueDates);
+            $uniqueDatesFormatted = array_map(function ($date) {
+                return Carbon::createFromFormat('d F Y', $date)->format('Y-m-d');
+            }, $uniqueDates);
+
+            sort($uniqueDatesFormatted);
+
+            $uniqueDates = array_map(function ($date) {
+                return Carbon::parse($date)->format('d F Y');
+            }, $uniqueDatesFormatted);
+
+            $startDate = Carbon::parse(min($uniqueDatesFormatted));
+            $endDate = Carbon::parse(max($uniqueDatesFormatted));
+
+            $allDates = [];
+            while ($startDate <= $endDate) {
+                $allDates[] = $startDate->format('d F Y');
+                $startDate->addDay();
+            }
+
+            $hariLibur = HariLibur::select('tanggal', 'keterangan')
+                ->get()
+                ->pluck('keterangan', 'tanggal')
+                ->toArray();
+            $html = view('menu.penjadwalan.pdf', [
+                'schedule' => $schedule,
+                'title' => self::TITLE_INDEX_PDF,
+                'tanggal' => $this->formatDateInIndonesian(now()),
+                'limit' => $limit,
+
+                'startDate' => Carbon::parse(reset($allDates))->locale('id')->translatedFormat('d F Y'),
+                'endDate' => Carbon::parse(end($allDates))->locale('id')->translatedFormat('d F Y'),
+                'jumlahSchedule' => $jumlahSchedule,
+            ])->render();
+
+            $html .= view('menu.penjadwalan.pdfMesin', [
+                'tanggal' => $this->formatDateInIndonesian(now()),
+                'limit' => $limit,
+                'schedule' => $schedule2,
+                'uniqueDates' => $uniqueDates,
+                'uniqueProducts' => $uniqueProducts,
+                'allDates' => $allDates,
+                'hariLibur' => $hariLibur,
+            ])->render();
+
+            $pdf = PDF::loadHTML($html);
+
+            $pdf->setPaper('A4', 'landscape');
+        } else {
+            $html = view('menu.penjadwalan.pdfError')->render();
+            $pdf = PDF::loadHTML($html);
+
+            $pdf->setPaper('A4', 'potrait');
+        }
 
         return $pdf->stream('penjadwalan_produksi_' . $limit . '_data_' . now()->format('Y-m-d') . '.pdf');
     }
@@ -158,11 +276,125 @@ class PenjadwalanController extends Controller
         return implode(' ', $parts);
     }
 
-    private function calculateProductionSchedule($orders, $machines)
+    private function calculateProductionSchedule($limit, $dateMulai, $machines)
     {
         $schedule = [];
-        $globalCurrentDate = now()->startOfDay();
+        $globalCurrentDate = Carbon::parse($dateMulai)->startOfDay();
         $machineCapacityTracker = [];
+
+        $prosesOrders = Pesanan::with(['pesananDetails.produk'])
+            ->where('status', 'proses')
+            ->take($limit)
+            ->get()
+            ->sortBy('tanggal_pengiriman')
+            ->values()
+            ->all();
+
+        $pesananDetails = PesananDetail::with(['pesanan', 'produk'])
+            ->whereHas('pesanan', function ($query) use ($prosesOrders) {
+                $pesananIds = collect($prosesOrders)->pluck('pesanan_id');
+                $query->whereIn('pesanan_id', $pesananIds);
+            })
+            ->join('pesanan', 'pesanan.pesanan_id', '=', 'pesanan_detail.pesanan_id')
+            ->orderBy('pesanan.tanggal_pengiriman')
+            ->orderBy('pesanan.pesanan_id')
+            ->get();
+
+        $hariLibur = HariLibur::pluck('tanggal')->toArray();
+
+        foreach ($pesananDetails as $pesananDetail) {
+            $pesanan = $pesananDetail->pesanan;
+            $produk = $pesananDetail->produk;
+            $jumlah = $pesananDetail->jumlah;
+
+            $remainingItems = $jumlah;
+            $startProdDate = null;
+            $machineUsage = [];
+
+            while ($remainingItems > 0) {
+                if ($globalCurrentDate->dayOfWeek !== 0 && !in_array($globalCurrentDate->format('Y-m-d'), $hariLibur)) {
+                    $dateKey = $globalCurrentDate->format('d F Y');
+
+                    if (!isset($machineCapacityTracker[$dateKey])) {
+                        $machineCapacityTracker[$dateKey] = array_fill_keys(
+                            collect($machines)->pluck('mesin_id')->all(),
+                            0
+                        );
+                    }
+
+                    foreach ($machines as $machine) {
+                        if ($machineCapacityTracker[$dateKey][$machine['mesin_id']] >= $machine['kapasitas_per_hari']) {
+                            continue;
+                        }
+
+                        if (!$startProdDate) {
+                            $startProdDate = clone $globalCurrentDate;
+                        }
+
+                        $availableCapacity = $machine['kapasitas_per_hari'] - $machineCapacityTracker[$dateKey][$machine['mesin_id']];
+                        $itemsToProcess = min($remainingItems, $availableCapacity);
+
+                        if ($itemsToProcess > 0) {
+                            $remainingItems -= $itemsToProcess;
+                            $machineCapacityTracker[$dateKey][$machine['mesin_id']] += $itemsToProcess;
+
+                            if (!isset($schedule[$machine['mesin_id']])) {
+                                $schedule[$machine['mesin_id']] = [
+                                    'mesin_id' => $machine['mesin_id'],
+                                    'nama_mesin' => $machine['nama_mesin'],
+                                    'produk' => [],
+                                ];
+                            }
+
+                            if (!isset($schedule[$machine['mesin_id']]['produk'][$produk->produk_id])) {
+                                $schedule[$machine['mesin_id']]['produk'][$produk->produk_id] = [
+                                    'produk_id' => $produk->produk_id,
+                                    'produk_detail_id' => $pesananDetail->pesanan_detail_id,
+                                    'nama_produk' => $produk->nama_produk,
+                                    'total_item' => 0,
+                                    'tanggal_produksi' => [],
+                                ];
+                            }
+
+                            $schedule[$machine['mesin_id']]['produk'][$produk->produk_id]['total_item'] += $itemsToProcess;
+
+                            if (!isset($schedule[$machine['mesin_id']]['produk'][$produk->produk_id]['tanggal_produksi'][$dateKey])) {
+                                $schedule[$machine['mesin_id']]['produk'][$produk->produk_id]['tanggal_produksi'][$dateKey] = [
+                                    'tanggal' => $dateKey,
+                                    'pesanan_details' => [],
+                                ];
+                            }
+
+                            $schedule[$machine['mesin_id']]['produk'][$produk->produk_id]['tanggal_produksi'][$dateKey]['pesanan_details'][] = [
+                                'pesanan_id' => $pesanan->pesanan_id,
+                                'pesanan_detail_id' => $pesananDetail->pesanan_detail_id,
+                                'kode_pesanan' => $pesanan->kode_pesanan,
+                                'jumlah' => $itemsToProcess,
+                            ];
+
+                            if ($remainingItems <= 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if ($remainingItems > 0) {
+                    $globalCurrentDate->addDay();
+                }
+            }
+        }
+
+        return $schedule;
+    }
+
+    private function calculateProductionSchedule2($orders, $dateMulai, $machines)
+    {
+        Penjadwalan::truncate();
+        $schedule = [];
+        $globalCurrentDate = Carbon::parse($dateMulai)->startOfDay();
+        $machineCapacityTracker = [];
+        $hariLibur = HariLibur::pluck('tanggal')->toArray();
 
         foreach ($orders as $order) {
             $remainingItems = $order['total_quantity'];
@@ -171,7 +403,7 @@ class PenjadwalanController extends Controller
             $completionTime = 0;
 
             while ($remainingItems > 0) {
-                if ($globalCurrentDate->dayOfWeek !== 0) {
+                if ($globalCurrentDate->dayOfWeek !== 0 && !in_array($globalCurrentDate->format('Y-m-d'), $hariLibur)) {
                     $dateKey = $this->formatDateInIndonesian($globalCurrentDate);
 
                     if (!isset($machineCapacityTracker[$dateKey])) {
@@ -224,28 +456,42 @@ class PenjadwalanController extends Controller
                 }
             }
 
-            // Format tanggal mulai dan selesai dalam bahasa Indonesia
             $startDateFormatted = $this->formatDateInIndonesian($startProdDate);
             $endDateFormatted = $this->formatDateInIndonesian($endProdDate);
 
-            // Format completion time dengan jumlah hari yang dibutuhkan
             $formattedCompletionTime = $startDateFormatted;
             if ($completionTime > 1) {
                 $formattedCompletionTime .= " - " . $endDateFormatted;
             }
 
-            // Hitung keterlambatan
             $dueDate = Carbon::parse($order['tanggal_pengiriman']);
             $completionDateCarbon = clone $endProdDate;
 
             $latenessDate = null;
-            $latenessDays = 0; // Default to 0 if there's no lateness
-
+            $latenessDays = 0;
             if ($completionDateCarbon->gt($dueDate)) {
-                // Format lateness date and calculate lateness days in Indonesian
                 $latenessDate = $this->formatDateInIndonesian($completionDateCarbon);
-                $latenessDays = $completionDateCarbon->diffInDays($dueDate); // Calculate days of lateness
+                $latenessDays = $completionDateCarbon->diffInDays($dueDate);
             }
+
+            $penjadwalan = new Penjadwalan([
+                'pesanan_id' => $order['pesanan_id'],
+                'due_date' => Carbon::now()->diffInDays(Carbon::parse($order['tanggal_pengiriman'])),
+                'completion_time' => $completionTime,
+                'lateness' => $latenessDays,
+                'mesin' => json_encode(array_reduce(array_keys($machineUsage), function ($result, $date) use ($machineUsage) {
+                    foreach ($machineUsage[$date] as $usage) {
+                        $result[] = [
+                            'date' => $date,
+                            'mesin_id' => $usage['mesin_id'],
+                            'usage' => $usage['kapasitas_terpakai'],
+                        ];
+                    }
+                    return $result;
+                }, []))
+
+            ]);
+            $penjadwalan->save();
 
             $schedule[] = [
                 'pesanan_id' => $order['pesanan_id'],
@@ -257,10 +503,10 @@ class PenjadwalanController extends Controller
                 'completion_time' => [
                     'tanggal' => $formattedCompletionTime,
                     'hari' => $completionTime,
-                ],  // Number of days it took to complete all items
+                ],
                 'keterlambatan' => [
-                    'tanggal' => $latenessDate,    // The lateness date (if any)
-                    'hari' => $latenessDays,      // Number of lateness days (if any)
+                    'tanggal' => $latenessDate,
+                    'hari' => $latenessDays,
                 ],
                 'penggunaan_mesin' => $machineUsage
             ];

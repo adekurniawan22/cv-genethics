@@ -23,7 +23,21 @@ class ProdukSeeder extends Seeder
                 'harga' => 200000,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
+            [
+                'nama_produk' => 'Hoodie',
+                'keterangan_produk' => 'Hoodie dengan bahan fleece nyaman untuk cuaca dingin',
+                'harga' => 180000,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nama_produk' => 'Kemeja Flanel',
+                'keterangan_produk' => 'Kemeja flanel lengan panjang dengan motif kotak-kotak',
+                'harga' => 120000,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }

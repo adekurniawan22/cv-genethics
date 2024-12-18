@@ -75,6 +75,8 @@
         <p style="margin-top: -10px">
             @if (isset($jumlahSchedule) && isset($tanggal))
                 Telah dijadwalkan {{ $jumlahSchedule }} pesanan pada tanggal {{ $tanggal }}.
+                <br>
+                Dari range {{ $startDate }} hingga {{ $endDate }}
             @else
                 Tidak ada informasi jadwal yang tersedia.
             @endif
@@ -82,6 +84,7 @@
     </div>
 
     @if (isset($schedule) && count($schedule) > 0)
+        <h2>1. JADWAL PRODUKSI PER PESANAN</h2>
         <table>
             <thead>
                 <tr>
@@ -104,7 +107,8 @@
                                 @if (isset($item['products']) && count($item['products']) > 0)
                                     @foreach ($item['products'] as $product)
                                         <li><small>{{ $product['nama_produk'] ?? 'Nama Produk Tidak Tersedia' }}
-                                                ({{ $product['jumlah'] ?? '0' }})</small></li>
+                                                ({{ $product['jumlah'] ?? '0' }})
+                                            </small></li>
                                     @endforeach
                                 @else
                                     <li><small>Tidak ada produk yang terdaftar</small></li>
@@ -128,7 +132,8 @@
                                 @if (($item['keterlambatan']['hari'] ?? 0) > 0)
                                     <span class="badge bg-danger"
                                         style="display: inline-block; text-align: center; width: auto; padding: 8px 12px; border-radius: 3px;">
-                                        <div>{{ $item['keterlambatan']['tanggal'] ?? 'Tanggal Tidak Tersedia' }}</div>
+                                        <div>{{ $item['keterlambatan']['tanggal'] ?? 'Tanggal Tidak Tersedia' }}
+                                        </div>
                                         <div>(telat {{ $item['keterlambatan']['hari'] ?? '0' }} hari)</div>
                                     </span>
                                 @else

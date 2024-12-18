@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, PenggunaController, DashboardController, MesinController, PenjadwalanController, PenjahitController, PesananController, ProdukController, PesananDetailController};
+use App\Http\Controllers\{AuthController, PenggunaController, DashboardController, MesinController, PenjadwalanController, PesananController, ProdukController, HariLiburController, PesananDetailController};
 
 // Routes untuk login dan logout
 Route::get('/', [AuthController::class, 'showLogin']);
@@ -11,7 +11,6 @@ Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 
 // Routes untuk dashboard
 Route::middleware(['auth.custom'])->group(function () {
-
 
     // Routes untuk Owner
     Route::middleware(['role:owner'])->group(function () {
@@ -44,6 +43,14 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/dashboard/keuangan/pdf-report/{year?}', [DashboardController::class, 'generatePdfReport'])
             ->name('manajer.dashboard.keuangan.pdf-report');
 
+        // CRUD HariLibur
+        Route::get('manajer/hari-libur', [HariLiburController::class, 'index'])->name('manajer.hari_libur.index');
+        Route::get('manajer/hari-libur/create', [HariLiburController::class, 'create'])->name('manajer.hari_libur.create');
+        Route::post('manajer/hari-libur', [HariLiburController::class, 'store'])->name('manajer.hari_libur.store');
+        Route::get('manajer/hari-libur/{id}/edit', [HariLiburController::class, 'edit'])->name('manajer.hari_libur.edit');
+        Route::put('manajer/hari-libur/{id}', [HariLiburController::class, 'update'])->name('manajer.hari_libur.update');
+        Route::delete('manajer/hari-libur/{id}', [HariLiburController::class, 'destroy'])->name('manajer.hari_libur.destroy');
+
         // CRUD Mesin
         Route::get('manajer/mesin', [MesinController::class, 'index'])->name('manajer.mesin.index');
         Route::get('manajer/mesin/create', [MesinController::class, 'create'])->name('manajer.mesin.create');
@@ -51,14 +58,6 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/mesin/{id}/edit', [MesinController::class, 'edit'])->name('manajer.mesin.edit');
         Route::put('manajer/mesin/{id}', [MesinController::class, 'update'])->name('manajer.mesin.update');
         Route::delete('manajer/mesin/{id}', [MesinController::class, 'destroy'])->name('manajer.mesin.destroy');
-
-        // CRUD Penjahit
-        Route::get('manajer/penjahit', [PenjahitController::class, 'index'])->name('manajer.penjahit.index');
-        Route::get('manajer/penjahit/create', [PenjahitController::class, 'create'])->name('manajer.penjahit.create');
-        Route::post('manajer/penjahit', [PenjahitController::class, 'store'])->name('manajer.penjahit.store');
-        Route::get('manajer/penjahit/{id}/edit', [PenjahitController::class, 'edit'])->name('manajer.penjahit.edit');
-        Route::put('manajer/penjahit/{id}', [PenjahitController::class, 'update'])->name('manajer.penjahit.update');
-        Route::delete('manajer/penjahit/{id}', [PenjahitController::class, 'destroy'])->name('manajer.penjahit.destroy');
 
         // CRUD Produk
         Route::get('manajer/produk', [ProdukController::class, 'index'])->name('manajer.produk.index');
@@ -71,16 +70,28 @@ Route::middleware(['auth.custom'])->group(function () {
         // List Pesanan
         Route::get('manajer/pesanan', [PesananController::class, 'index'])->name('manajer.pesanan.index');
         Route::get('manajer/pesanan/{pesanan}/detail', [PesananController::class, 'detail'])->name('manajer.pesanan.detail');
+        Route::get('manajer/pesanan/detail/{pesananDetail}/detail', [PesananDetailController::class, 'detail'])->name('manajer.pesanan.pesanan_detail');
 
         // List Penjadwalan
         Route::middleware(['role:manajer'])->group(function () {
-            Route::get('manajer/penjadwalan/{limit?}', [PenjadwalanController::class, 'index'])
+            Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
                 ->name('manajer.penjadwalan.index')
-                ->where('limit', '[0-9]+');
+                ->defaults('limit', 50)
+                ->where([
+                    'limit' => '[0-9]+',
+                    'date' => '\d{4}-\d{2}-\d{2}',
+                ]);
         });
-        Route::get('manajer/penjadwalan/pdf/{limit?}', [PenjadwalanController::class, 'downloadPDF'])
-            ->name('manajer.penjadwalan.pdf')
-            ->where('limit', '[0-9]+');
+
+        Route::middleware(['role:manajer'])->group(function () {
+            Route::get('manajer/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
+                ->name('manajer.penjadwalan.pdf')
+                ->defaults('limit', 50)
+                ->where([
+                    'limit' => '[0-9]+',
+                    'date' => '\d{4}-\d{2}-\d{2}',
+                ]);
+        });
     });
 
     // Routes untuk Admin

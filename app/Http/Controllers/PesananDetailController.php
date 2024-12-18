@@ -2,63 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pesanan;
+use App\Models\PesananDetail;
 use Illuminate\Http\Request;
 
 class PesananDetailController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function detail($pesananDetailId)
     {
-        //
-    }
+        $pesananDetail = PesananDetail::with([
+            'produk' => function ($query) {
+                $query->select('produk_id', 'nama_produk', 'harga');
+            },
+            'pesanan' => function ($query) {
+                $query->select('*')
+                    ->with([
+                        'pengguna' => function ($query) {
+                            $query->select('pengguna_id', 'nama', 'email');
+                        }
+                    ]);
+            }
+        ])
+            ->where('pesanan_detail_id', $pesananDetailId) // Cari berdasarkan pesanan_detail_id
+            ->first(); // Ambil satu record saja
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        if (!$pesananDetail) {
+            return response()->json(['message' => 'Pesanan detail tidak ditemukan'], 404);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json($pesananDetail);
     }
 }
