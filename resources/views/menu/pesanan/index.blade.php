@@ -51,7 +51,7 @@
                                     <tr>
                                         <td>{{ $pesanan->pesanan_id }}</td>
                                         <td>
-                                            Pesanan#{{ $pesanan->kode_pesanan }}
+                                            {{ $pesanan->kode_pesanan }}
                                             <br>
                                             <small class="text-muted">{{ $pesanan->channel }}</small>
                                         </td>
@@ -188,71 +188,68 @@
                 const role = '{{ session()->get('role') }}';
                 const base_url = '{{ url('/') }}';
 
-                // Kirim permintaan Ajax ke server untuk mengambil detail pesanan
                 fetch(`${base_url}/${role}/pesanan/${pesananId}/detail`)
                     .then(response => response.json())
                     .then(data => {
-                        // Tampilkan data detail pesanan dalam modal
                         var detailHtml = '';
-
                         if (data.length > 0) {
                             var pesanan = data[0].pesanan;
                             var total = 0;
-                            // Ambil status pesanan
                             const status = pesanan.status.charAt(0).toUpperCase() + pesanan.status.slice(1)
                                 .toLowerCase();
 
                             detailHtml += `
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Kode Pesanan:</strong> PESANAN#${pesanan.kode_pesanan}</p>
-                                    <p><strong>Channel:</strong> ${pesanan.channel}</p>
-                                    <p><strong>Status:</strong> <span class="badge bg-${pesanan.status == 'selesai' ? 'success' : 'warning'}">${status}</span></p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Kode Pesanan:</strong> ${pesanan.kode_pesanan}</p>
+                                        <p><strong>Channel:</strong> ${pesanan.channel}</p>
+                                        <p><strong>Nama Pemesan:</strong> ${pesanan.nama_pemesan}</p>
+                                        <p><strong>Status:</strong> <span class="badge bg-${pesanan.status == 'selesai' ? 'success' : 'warning'}">${status}</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Dibuat Oleh:</strong> ${pesanan.pengguna.nama}</p>
+                                        <p><strong>Tanggal Pesanan:</strong> ${formatDateIndonesia(pesanan.tanggal_pesanan)}</p>
+                                        <p><strong>Tanggal Pengiriman:</strong> ${formatDateIndonesia(pesanan.tanggal_pengiriman)}</p>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <p><strong>Dibuat Oleh:</strong> ${pesanan.pengguna.nama}</p>
-                                    <p><strong>Tanggal Pesanan:</strong> ${formatDateIndonesia(pesanan.tanggal_pesanan)}</p>
-                                    <p><strong>Tanggal Pengiriman:</strong> ${formatDateIndonesia(pesanan.tanggal_pengiriman)}</p>
-                                </div>
-                            </div>
-                            <hr class="mt-0">
-                            <h5>Detail Pesanan</h5>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Produk</th>
-                                        <th>Jumlah</th>
-                                        <th>Harga</th>
-                                        <th>Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                            `;
+                                <hr class="mt-0">
+                                <h5>Detail Pesanan</h5>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Produk</th>
+                                            <th>Jumlah</th>
+                                            <th>Harga</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                            `;
 
                             data.forEach(item => {
                                 var subtotal = item.jumlah * item.produk.harga;
                                 total += subtotal;
 
                                 detailHtml += `
-                                <tr>
-                                    <td>${item.produk.nama_produk}</td>
-                                    <td>x ${item.jumlah}</td>
-                                    <td>Rp ${item.produk.harga.toLocaleString('id-ID')}</td>
-                                    <td>Rp ${subtotal.toLocaleString('id-ID')}</td>
-                                </tr>
-                            `;
+                                    <tr>
+                                        <td>${item.produk.nama_produk}</td>
+                                        <td>x ${item.jumlah}</td>
+                                        <td>Rp ${item.produk.harga.toLocaleString('id-ID')}</td>
+                                        <td>Rp ${subtotal.toLocaleString('id-ID')}</td>
+                                    </tr>
+                                `;
                             });
 
                             detailHtml += `
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                        <td>Rp ${total.toLocaleString('id-ID')}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        `;
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td>Rp ${total.toLocaleString('id-ID')}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            `;
                         } else {
                             detailHtml = '<p>Tidak ada detail pesanan.</p>';
                         }
@@ -262,6 +259,8 @@
                     })
                     .catch(error => {
                         console.error('Terjadi kesalahan:', error);
+                        const pesananModalBody = document.querySelector('#pesananModal .modal-body');
+                        pesananModalBody.innerHTML = '<p>Terjadi kesalahan saat mengambil data.</p>';
                     });
             }
 

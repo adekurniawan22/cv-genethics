@@ -92,6 +92,13 @@ Route::middleware(['auth.custom'])->group(function () {
                     'date' => '\d{4}-\d{2}-\d{2}',
                 ]);
         });
+
+        // Hari Libur
+        // Route::get('manajer/produk', [ProdukController::class, 'index'])->name('manajer.produk.index');
+        Route::get('/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('get.hari.libur');
+        Route::post('/store-hari-libur', [HariLiburController::class, 'storeHariLibur'])->name('store.hari.libur');
+        Route::put('/update-hari-libur/{id}', [HariLiburController::class, 'updateHariLibur'])->name('update.hari.libur');
+        Route::delete('/delete-hari-libur/{id}', [HariLiburController::class, 'deleteHariLibur'])->name('delete.hari.libur');
     });
 
     // Routes untuk Admin

@@ -30,11 +30,17 @@
                                     @csrf
                                     <div class="card-body rounded bg-secondary text-white">
                                         <div class="mb-3">
+                                            <label for="nama_pemesan" class="form-label">Nama Pemesan</label>
+                                            <input type="text" name="nama_pemesan" id="nama_pemesan" class="form-control"
+                                                placeholder="Masukkan nama pemesan">
+                                        </div>
+                                        <div class="mb-3">
                                             <label for="channel" class="form-label">Channel</label>
                                             <select name="channel" id="channel" class="form-select">
                                                 <option value="">Pilih Channel</option>
-                                                <option value="Online">Online</option>
-                                                <option value="Offline">Offline</option>
+                                                <option value="WA">WA</option>
+                                                <option value="SHOPEE">SHOPEE</option>
+                                                <option value="TOKOPEDIA">TOKOPEDIA</option>
                                             </select>
                                         </div>
                                         <div class="mb-3">
@@ -248,6 +254,7 @@
         document.getElementById('pesananForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
+            const nama_pemesan = document.getElementById('nama_pemesan');
             const channel = document.getElementById('channel');
             const tanggalPesanan = document.getElementById('tanggal_pesanan');
             const tanggalPengiriman = document.getElementById('tanggal_pengiriman');
@@ -255,6 +262,13 @@
             console.log(tanggalPesanan)
 
             let isValid = true;
+
+            if (!nama_pemesan.value) {
+                addErrorMessage(nama_pemesan, 'Harap masukkan nama pemesan.');
+                isValid = false;
+            } else {
+                removeErrorMessage(nama_pemesan);
+            }
 
             if (!channel.value) {
                 addErrorMessage(channel, 'Harap pilih channel.');
@@ -333,28 +347,27 @@
                 // Mengumpulkan data lainnya dari form
                 const formData = new FormData(this);
                 const status = formData.get('status');
+                const nama_pemesan = formData.get('nama_pemesan');
                 const channel = formData.get('channel');
                 const tanggalPesanan = formData.get('tanggal_pesanan');
                 const toggleTanggalPengirimanChecked = document.getElementById('toggleTanggalPengiriman').checked;
                 let tanggalPengiriman;
 
                 if (toggleTanggalPengirimanChecked) {
-                    // If checkbox is checked, use the input value
                     tanggalPengiriman = formData.get('tanggal_pengiriman');
                 } else {
-                    // If checkbox is not checked, calculate date + 9 days from tanggal_pesanan
                     const tanggalPesanan = new Date(formData.get('tanggal_pesanan'));
                     const calculatedDate = new Date(tanggalPesanan);
                     calculatedDate.setDate(calculatedDate.getDate() + 9);
                     tanggalPengiriman = calculatedDate.toISOString().split('T')[0];
                 }
 
-                // Gabungkan semua data yang akan dikirim
                 const formDataObj = {
                     produkData: produkData,
                     tanggalPengiriman: tanggalPengiriman,
-                    status: status,
+                    nama_pemesan: nama_pemesan,
                     channel: channel,
+                    status: status,
                     tanggalPesanan: tanggalPesanan
                 };
 
@@ -371,7 +384,7 @@
                     .then(data => {
                         if (data.success) {
                             window.location.href =
-                                "{{ route(session()->get('role') . '.pesanan.index') }}"; // Session 'success_message' akan tersedia di halaman tujuan
+                                "{{ route(session()->get('role') . '.pesanan.index') }}";
                         } else {
                             alert("Gagal menyimpan data pesanan.");
                         }

@@ -64,6 +64,8 @@ class PenjadwalanController extends Controller
         $schedule = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
         $schedule2 = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
 
+
+
         $uniqueDates = [];
         $uniqueProducts = [];
         foreach ($schedule as $mesinData) {
@@ -79,10 +81,10 @@ class PenjadwalanController extends Controller
                         'total_item' => 0
                     ];
                 }
-                $uniqueProducts[$produkData['produk_id']]['total_item'] += $produkData['total_item'];
+
+                $uniqueProducts[$produkData['produk_id']]['total_item'] = $produkData['total_item'];
             }
         }
-
 
         $uniqueDates = array_unique($uniqueDates);
         $uniqueDatesFormatted = array_map(function ($date) {
@@ -95,7 +97,6 @@ class PenjadwalanController extends Controller
             return Carbon::parse($date)->format('d F Y');
         }, $uniqueDatesFormatted);
 
-        // dd($uniqueDates);
         $startDate = Carbon::parse(min($uniqueDatesFormatted));
         $endDate = Carbon::parse(max($uniqueDatesFormatted));
 

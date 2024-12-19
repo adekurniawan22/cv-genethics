@@ -34,7 +34,7 @@ class PesananDetailSeeder extends Seeder
                 DB::table('pesanan_detail')->insert([
                     'pesanan_id' => $pesananId,
                     'produk_id' => $produkId,
-                    'jumlah' => $faker->numberBetween(10, 150), // Jumlah produk antara 1-5
+                    'jumlah' => $faker->numberBetween(1, 50), // Jumlah produk antara 1-5
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

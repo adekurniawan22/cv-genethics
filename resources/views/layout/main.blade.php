@@ -22,6 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="<?= url('assets/onedash') ?>/plugins/datatable/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+    <link href="<?= url('assets/onedash') ?>/plugins/fullcalendar/css/main.min.css" rel="stylesheet" />
 
     <!-- loader-->
     <link href="<?= url('assets/onedash') ?>/css/pace.min.css" rel="stylesheet" />

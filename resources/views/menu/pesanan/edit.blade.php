@@ -34,13 +34,21 @@
                                         value="{{ $pesanan->pesanan_id }}">
                                     <div class="card-body rounded text-dark" style="background-color: #eee">
                                         <div class="mb-3">
+                                            <label for="nama_pemesan" class="form-label">Nama Pemesan</label>
+                                            <input type="text" name="nama_pemesan" id="nama_pemesan" class="form-control"
+                                                placeholder="Masukkan nama pemesan" value="{{ $pesanan->nama_pemesan }}">
+                                        </div>
+                                        <div class="mb-3">
                                             <label for="channel" class="form-label">Channel</label>
                                             <select name="channel" id="channel" class="form-select">
                                                 <option value="">Pilih Channel</option>
-                                                <option value="Online"
-                                                    {{ $pesanan->channel === 'Online' ? 'selected' : '' }}>Online</option>
-                                                <option value="Offline"
-                                                    {{ $pesanan->channel === 'Offline' ? 'selected' : '' }}>Offline</option>
+                                                <option value="WA" {{ $pesanan->channel === 'WA' ? 'selected' : '' }}>WA
+                                                </option>
+                                                <option value="SHOPEE"
+                                                    {{ $pesanan->channel === 'SHOPEE' ? 'selected' : '' }}>SHOPEE</option>
+                                                <option value="TOKOPEDIA"
+                                                    {{ $pesanan->channel === 'TOKOPEDIA' ? 'selected' : '' }}>TOKOPEDIA
+                                                </option>
                                             </select>
                                         </div>
                                         <div class="mb-3">
@@ -277,12 +285,20 @@
         document.getElementById('pesananForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
+            const nama_pemesan = document.getElementById('nama_pemesan');
             const channel = document.getElementById('channel');
             const tanggalPesanan = document.getElementById('tanggal_pesanan');
             const tanggalPengiriman = document.getElementById('tanggal_pengiriman');
             const status = document.getElementById('status');
 
             let isValid = true;
+
+            if (!nama_pemesan.value) {
+                addErrorMessage(nama_pemesan, 'Harap masukkan nama pemesan.');
+                isValid = false;
+            } else {
+                removeErrorMessage(nama_pemesan);
+            }
 
             if (!channel.value) {
                 addErrorMessage(channel, 'Harap pilih channel.');
@@ -362,6 +378,7 @@
                 const formData = new FormData(this);
                 const tanggalPengiriman = formData.get('tanggal_pengiriman');
                 const status = formData.get('status');
+                const nama_pemesan = formData.get('nama_pemesan');
                 const channel = formData.get('channel');
                 const tanggalPesanan = formData.get('tanggal_pesanan');
 
@@ -369,8 +386,9 @@
                 const formDataObj = {
                     produkData: produkData,
                     tanggalPengiriman: tanggalPengiriman,
-                    status: status,
+                    nama_pemesan: nama_pemesan,
                     channel: channel,
+                    status: status,
                     tanggalPesanan: tanggalPesanan
                 };
 

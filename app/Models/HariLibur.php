@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HariLibur extends Model
 {
     protected $table = 'hari_libur';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'hari_libur_id';
     public $timestamps = false;
 
     protected $fillable = [

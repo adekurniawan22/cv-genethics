@@ -224,7 +224,10 @@
                                                     <tr>
                                                         <td class="py-3 px-4">{{ $produkData['nama_produk'] }}</td>
                                                         <td class="text-center py-3 px-4">
-                                                            {{ $produkData['total_item'] }} item</td>
+                                                            @if (isset($mesinData['produk'][$produkId]))
+                                                                {{ $mesinData['produk'][$produkId]['total_item'] }} item
+                                                            @endif
+                                                        </td>
                                                         @foreach ($allDates as $date)
                                                             <td class="text-center"
                                                                 style="

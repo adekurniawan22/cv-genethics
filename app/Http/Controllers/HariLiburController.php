@@ -21,72 +21,46 @@ class HariLiburController extends Controller
         ]);
     }
 
-    public function create()
+    public function getHariLibur()
     {
-        return view('menu.hari_libur.create', [
-            'title' => self::TITLE_CREATE
-        ]);
+        $hariLibur = HariLibur::all()->map(function ($item) {
+            return [
+                'id' => $item->hari_libur_id,
+                'title' => $item->keterangan,
+                'start' => $item->tanggal,
+                'allDay' => true
+            ];
+        });
+
+        return response()->json($hariLibur);
     }
 
-    public function store(Request $request)
+    public function storeHariLibur(Request $request)
     {
-        $this->validateStoreOrUpdate($request);
-
-        HariLibur::create([
+        $hariLibur = HariLibur::create([
             'tanggal' => $request->tanggal,
-            'keterangan' => $request->keterangan,
+            'keterangan' => $request->keterangan
         ]);
 
-        return redirect()->route(session()->get('role') . '.hari_libur.index')->with('success', 'Hari libur berhasil ditambahkan.');
+        return response()->json(['success' => true]);
     }
 
-    public function edit($id)
+    public function updateHariLibur(Request $request, $id)
     {
-        $hariLibur = HariLibur::findOrFail($id);
-
-        return view('menu.hari_libur.edit', [
-            'hariLibur' => $hariLibur,
-            'title' => self::TITLE_EDIT
+        $hariLibur = HariLibur::where('hari_libur_id', $id)->firstOrFail();
+        $hariLibur->update([
+            'tanggal' => $request->tanggal,
+            'keterangan' => $request->keterangan
         ]);
+
+        return response()->json(['success' => true]);
     }
 
-    public function update(Request $request, $id)
+    public function deleteHariLibur($id)
     {
-        $this->validateStoreOrUpdate($request, $id);
+        $hariLibur = HariLibur::where('hari_libur_id', $id)->firstOrFail();
+        $hariLibur->delete();
 
-        $hariLibur = HariLibur::findOrFail($id);
-
-        // Set nilai baru dari request
-        $hariLibur->tanggal = $request->tanggal;
-        $hariLibur->keterangan = $request->keterangan;
-
-        // Cek apakah ada perubahan
-        if ($hariLibur->isDirty()) {
-            $hariLibur->save();
-            return redirect()->route(session()->get('role') . '.hari_libur.index')->with('success', 'Hari libur berhasil diedit.');
-        }
-
-        return redirect()->route(session()->get('role') . '.hari_libur.index')->with('info', 'Tidak ada perubahan yang dilakukan.');
-    }
-
-    public function destroy($id)
-    {
-        HariLibur::findOrFail($id)->delete();
-        return redirect()->route(session()->get('role') . '.hari_libur.index')->with('success', 'Hari libur berhasil dihapus.');
-    }
-
-    private function validateStoreOrUpdate(Request $request, $id = null)
-    {
-        $rules = [
-            'tanggal' => 'required|date',
-            'keterangan' => 'required|string|max:255',
-        ];
-
-        $customAttributes = [
-            'tanggal' => 'Tanggal',
-            'keterangan' => 'Keterangan',
-        ];
-
-        return $request->validate($rules, [], $customAttributes);
+        return response()->json(['success' => true]);
     }
 }

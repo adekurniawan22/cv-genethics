@@ -11,7 +11,7 @@
         <h2>2. JADWAL PRODUKSI PER MESIN DAN PER PRODUK </h2>
 
         @foreach ($dateChunks as $chunkIndex => $chunk)
-            @if (count($allDates) > 12)
+            @if (count($allDates) > 9)
                 <h3> 2.{{ $chunkIndex + 1 }}. Tabel dimulai dari
                     <em>{{ Carbon\Carbon::parse($chunk[0])->locale('id')->translatedFormat('d F Y') }}</em>
                     hingga <em>{{ Carbon\Carbon::parse(end($chunk))->locale('id')->translatedFormat('d F Y') }}</em>
@@ -28,9 +28,9 @@
                     <tr>
                         <th>Mesin</th>
                         <th>Produk</th>
-                        <th>Total</th>
+                        <th style="text-align: center">Total</th>
                         @foreach ($chunk as $date)
-                            <th>
+                            <th style="text-align: center">
                                 {{ Carbon\Carbon::parse($date)->locale('id')->translatedFormat('d M Y') }}
                             </th>
                         @endforeach
@@ -41,7 +41,7 @@
                         @foreach ($uniqueProducts as $produkId => $produkData)
                             <tr>
                                 <td
-                                    style=" width: 70px;
+                                    style=" width: 80px;
                                 @if ($lastMesin != $mesinData['nama_mesin']) border-top: 1px solid #ddd; 
                                     border-bottom: 0px !important;
                                 @else
@@ -57,13 +57,15 @@
                                         <!-- Kosong jika mesin sama -->
                                     @endif
                                 </td>
-                                <td style=" width: 70px;">{{ $produkData['nama_produk'] }}</td>
-                                <td style=" width: 70px;">
-                                    {{ $produkData['total_item'] }} item
+                                <td style=" width: 100px;">{{ $produkData['nama_produk'] }}</td>
+                                <td style=" width: 70px; text-align:center">
+                                    @if (isset($mesinData['produk'][$produkId]))
+                                        {{ $mesinData['produk'][$produkId]['total_item'] }} item
+                                    @endif
                                 </td>
                                 @foreach ($chunk as $date)
                                     <td
-                                        style=" 
+                                        style="text-align: center; 
                                     @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date])) background-color: green; color: white;
                                     @elseif (array_key_exists(Carbon\Carbon::parse($date)->format('Y-m-d'), $hariLibur)) 
                                         background-color: red; color: white; 

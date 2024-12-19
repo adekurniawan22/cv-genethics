@@ -52,28 +52,24 @@ class PesananController extends Controller
         // Validasi data utama pesanan
         $request->validate([
             'tanggalPengiriman' => 'required|date',
+            'nama_pemesan' => 'required|string',
             'status' => 'required|string|in:proses,selesai',
-            'channel' => 'required|string|in:Online,Offline',
+            'channel' => 'required|string',
             'tanggalPesanan' => 'required|date',
             'produkData' => 'required|array|min:1',
             'produkData.*.produk_id' => 'required|exists:produk,produk_id',
             'produkData.*.jumlah' => 'required|integer|min:1',
         ]);
 
-        // Ambil bulan dan tahun saat ini sesuai zona waktu Indonesia (WIB)
-        $bulan = \Carbon\Carbon::now('Asia/Jakarta')->format('m'); // Bulan dalam format 2 digit
-        $tahun = \Carbon\Carbon::now('Asia/Jakarta')->format('Y'); // Tahun 4 digit
-
-        // Ambil pesanan_id terakhir untuk menghitung ID pesanan selanjutnya
         $lastPesanan = Pesanan::latest('pesanan_id')->first();
-        $nextPesananId = $lastPesanan ? $lastPesanan->pesanan_id + 1 : 1; // Jika tidak ada pesanan, mulai dari ID 1
+        $nextPesananId = $lastPesanan ? $lastPesanan->pesanan_id + 1 : 1;
 
-        // Membuat kode pesanan dengan format PESANAN/bulan/TAHUN/pesanan_id
-        $kodePesanan = "PESANAN/{$bulan}/{$tahun}/{$nextPesananId}";
+        $kodePesanan = $request->input('channel') . '-' . $nextPesananId;
 
         // Simpan data utama pesanan
         $pesanan = Pesanan::create([
-            'kode_pesanan' => $kodePesanan, // Simpan kode pesanan
+            'nama_pemesan' => $request->input('nama_pemesan'),
+            'kode_pesanan' => $kodePesanan,
             'tanggal_pengiriman' => $request->input('tanggalPengiriman'),
             'status' => $request->input('status'),
             'channel' => $request->input('channel'),
@@ -114,7 +110,8 @@ class PesananController extends Controller
         $request->validate([
             'tanggalPengiriman' => 'nullable|date',
             'status' => 'required|string|in:proses,selesai',
-            'channel' => 'required|string|in:Online,Offline',
+            'nama_pemesan' => 'required|string',
+            'channel' => 'required|string',
             'tanggalPesanan' => 'required|date',
             'produkData' => 'required|array|min:1',
             'produkData.*.produk_id' => 'required|exists:produk,produk_id',
@@ -125,6 +122,7 @@ class PesananController extends Controller
         $pesanan = Pesanan::findOrFail($id);
 
         // Update data utama pesanan
+        $pesanan->nama_pemesan = $request->input('nama_pemesan');
         $pesanan->tanggal_pengiriman = $request->input('tanggalPengiriman');
         $pesanan->status = $request->input('status');
         $pesanan->channel = $request->input('channel');

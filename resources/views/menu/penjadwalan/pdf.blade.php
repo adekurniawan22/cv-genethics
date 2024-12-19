@@ -74,9 +74,9 @@
         <h1>{{ isset($title) ? $title : 'Laporan' }}</h1>
         <p style="margin-top: -10px">
             @if (isset($jumlahSchedule) && isset($tanggal))
-                Telah dijadwalkan {{ $jumlahSchedule }} pesanan pada tanggal {{ $tanggal }}.
+                Telah dijadwalkan {{ $jumlahSchedule }} pesanan pada tanggal {{ $tanggal }}
                 <br>
-                Dari range {{ $startDate }} hingga {{ $endDate }}
+                Dari rentang waktu <strong>{{ $startDate }}</strong> hingga <strong>{{ $endDate }}</strong>
             @else
                 Tidak ada informasi jadwal yang tersedia.
             @endif
