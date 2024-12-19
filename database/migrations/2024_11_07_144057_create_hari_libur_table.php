@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('hari_libur', function (Blueprint $table) {
             $table->id('hari_libur_id');
-            $table->date('tanggal')->unique();
+            $table->date('tanggal');
             $table->string('keterangan');
             $table->timestamps();
         });

@@ -29,43 +29,18 @@
         <main class="authentication-content pt-0 w-100">
             <div class="authentication-card pt-0 w-100">
                 <div class="container-fluid">
-                    <!-- Modal -->
-                    <div class="modal fade" id="loginAccountModal" tabindex="-1"
-                        aria-labelledby="loginAccountModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="loginAccountModalLabel">Akun Login</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="card w-100 bg-info">
-                                        <div class="card-body">
-                                            <ul>
-                                                <li><strong>Role Owner:</strong>
-                                                    <ul>
-                                                        <li>Email: owner@example.com</li>
-                                                        <li>Password: password</li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Role Manajer Produksi:</strong>
-                                                    <ul>
-                                                        <li>Email: manajer@example.com</li>
-                                                        <li>Password: password</li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Role Admin:</strong>
-                                                    <ul>
-                                                        <li>Email: admin@example.com</li>
-                                                        <li>Password: password</li>
-                                                    </ul>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
+
+                    <div class="col-12 mb-3">
+                        <div class="ms-auto position-relative">
+                            <div class="position-absolute top-50 translate-middle-y search-icon px-3">
+                                <i class="bi bi-person-fill"></i>
                             </div>
+                            <select class="form-select radius-30 ps-5" id="userSelect" name="email">
+                                <option value="">Pilih user untuk mempermudah hidup</option>
+                                <option value="owner@example.com">Owner</option>
+                                <option value="manajer@example.com">Manajer Produksi</option>
+                                <option value="admin@example.com">Admin</option>
+                            </select>
                         </div>
                     </div>
 
@@ -117,8 +92,8 @@
                                                     </div>
                                                     <input type="password"
                                                         class="form-control radius-30 ps-5 @error('password') is-invalid @enderror"
-                                                        id="inputChoosePassword" placeholder="Masukkan password"
-                                                        name="password" value="{{ old('password') }}">
+                                                        id="password" placeholder="Masukkan password" name="password"
+                                                        value="{{ old('password') }}">
                                                 </div>
                                                 @error('password')
                                                     <div class="invalid-feedback d-block">
@@ -160,6 +135,23 @@
     <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/notification-custom-script.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            var userSelect = document.getElementById('userSelect');
+            userSelect.addEventListener('change', function() {
+                var emailInput = document.getElementById('email');
+                var passwordInput = document.getElementById('password');
+
+                if (this.value === "") {
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                } else {
+                    emailInput.value = this.value;
+                    passwordInput.value = 'password';
+                }
+
+                if (this.value !== '') {
+                    this.form.submit();
+                }
+            });
             // Notification Success
             @if (session()->has('success'))
                 function notifSuccess() {

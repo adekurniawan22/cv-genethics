@@ -37,12 +37,24 @@ class HariLiburController extends Controller
 
     public function storeHariLibur(Request $request)
     {
-        $hariLibur = HariLibur::create([
-            'tanggal' => $request->tanggal,
-            'keterangan' => $request->keterangan
-        ]);
+        try {
+            $hariLibur = HariLibur::create([
+                'tanggal' => $request->tanggal,
+                'keterangan' => $request->keterangan
+            ]);
 
-        return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'id' => $hariLibur->hari_libur_id,
+                'title' => $hariLibur->keterangan, // Untuk kompatibilitas dengan FullCalendar
+                'start' => $hariLibur->tanggal // Untuk kompatibilitas dengan FullCalendar
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambah hari libur: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function updateHariLibur(Request $request, $id)

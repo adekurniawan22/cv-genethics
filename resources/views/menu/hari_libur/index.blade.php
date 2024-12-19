@@ -106,9 +106,13 @@
 
 @section('script')
     <script src="<?= url('assets/onedash') ?>/plugins/fullcalendar/js/main.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/id.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
     <script>
         const base_url = '{{ url('/') }}';
+        moment.locale('id');
         document.addEventListener('DOMContentLoaded', function() {
             function formatDate(date) {
                 var year = date.getFullYear();
@@ -119,6 +123,7 @@
 
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'id',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
@@ -143,38 +148,43 @@
                 selectable: true,
                 businessHours: true,
                 events: function(info, successCallback, failureCallback) {
-                    // Mengambil data hari libur dari server
                     $.ajax({
                         url: `${base_url}/get-hari-libur`,
                         method: 'GET',
                         success: function(hariLibur) {
                             var events = hariLibur.map(function(item) {
                                 return {
+                                    id: item.id,
                                     title: item.title,
                                     start: item.start,
-                                    backgroundColor: 'red'
+                                    backgroundColor: 'red',
+                                    extendedProps: {
+                                        keterangan: item.title
+                                    }
                                 };
                             });
 
-                            // Menambahkan event untuk hari Minggu
+                            // Add Sunday events
                             var startDate = new Date(info.start);
                             var endDate = new Date(info.end);
                             var currentDate = new Date(startDate);
 
                             while (currentDate < endDate) {
-                                if (currentDate.getDay() === 0) { // 0 adalah hari Minggu
+                                if (currentDate.getDay() === 0) {
                                     events.push({
+                                        id: 'sunday-' + formatDate(currentDate),
                                         title: 'Hari Minggu',
                                         start: formatDate(currentDate),
-                                        backgroundColor: 'red'
+                                        backgroundColor: 'red',
+                                        editable: false
                                     });
                                 }
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
-
                             successCallback(events);
                         },
                         error: function(xhr, status, error) {
+                            console.error('Error fetching events:', error);
                             failureCallback(error);
                         }
                     });
@@ -184,83 +194,54 @@
                 },
                 eventClick: function(info) {
                     var event = info.event;
-                    if (event.title === 'Hari Minggu') {
-                        // Tidak melakukan apa-apa jika event adalah hari Minggu
+
+                    // Check if Sunday
+                    if (event.title === 'Hari Minggu' || event.id.startsWith('sunday-')) {
                         return;
                     }
+
+                    // Set form values
                     $('#hari_libur_id').val(event.id);
                     $('#edit_tanggal').val(moment(event.start).format('YYYY-MM-DD'));
-                    $('#edit_keterangan').val(event.title);
+                    $('#edit_keterangan').val(event.extendedProps.keterangan || event.title);
+
                     $('#editModal').modal('show');
-                }
-            });
-            calendar.render();
+                },
+                eventDidMount: function(info) {
+                    var event = info.event;
+                    var element = info.el;
 
-            // Handle edit form submission
-            $('#editForm').on('submit', function(e) {
-                e.preventDefault();
-                var id = $('#hari_libur_id').val();
-
-                $.ajax({
-                    url: `${base_url}/update-hari-libur/` + id,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    method: 'PUT',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        tanggal: $('#edit_tanggal').val(),
-                        keterangan: $('#edit_keterangan').val()
-                    },
-                    success: function(response) {
-                        $('#editModal').modal('hide');
-                        calendar.refetchEvents();
-                        Lobibox.notify('success', {
-                            title: 'Berhasil',
-                            pauseDelayOnHover: true,
-                            continueDelayOnInactiveTab: false,
-                            position: 'top right',
-                            icon: 'bx bx-check-circle',
-                            msg: 'Data berhasil diupdate!'
-                        });
-                    },
-                    error: function() {
-                        alert('Terjadi kesalahan saat mengupdate data!');
-                    }
-                });
-            });
-
-            // Handle delete button click
-            $('#deleteButton').on('click', function() {
-                var id = $('#hari_libur_id').val();
-
-                if (confirm('Apakah Anda yakin ingin menghapus hari libur ini?')) {
-                    $.ajax({
-                        url: `${base_url}/delete-hari-libur/` + id,
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        method: 'DELETE',
-                        success: function(response) {
-                            $('#editModal').modal('hide');
-                            calendar.refetchEvents();
-                            Lobibox.notify('success', {
-                                title: 'Berhasil',
-                                pauseDelayOnHover: true,
-                                continueDelayOnInactiveTab: false,
-                                position: 'top right',
-                                icon: 'bx bx-check-circle',
-                                msg: 'Data berhasil dihapus!'
-                            });
-                        },
-                        error: function() {
-                            alert('Terjadi kesalahan saat menghapus data!');
-                        }
+                    tippy(element, {
+                        content: event.title,
+                        theme: 'light'
                     });
                 }
+                // eventMouseEnter: function(info) {
+                //     var event = info.event;
+                //     var tooltip = document.createElement('div');
+                //     tooltip.className = 'event-tooltip';
+                //     tooltip.innerHTML = event.title;
+                //     tooltip.style.position = 'absolute';
+                //     tooltip.style.zIndex = '999';
+                //     tooltip.style.backgroundColor = 'white';
+                //     tooltip.style.padding = '5px';
+                //     tooltip.style.border = '1px solid #ccc';
+
+                //     var eventEl = info.el;
+                //     eventEl.appendChild(tooltip);
+                // },
+                // eventMouseLeave: function(info) {
+                //     var tooltip = info.el.querySelector('.event-tooltip');
+                //     if (tooltip) {
+                //         tooltip.remove();
+                //     }
+                // }
             });
 
-            // Handle add form submission  
+            // Render calendar
+            calendar.render();
+
+            // Handle add form submission
             $('#addForm').on('submit', function(e) {
                 e.preventDefault();
 
@@ -276,22 +257,127 @@
                         keterangan: $('#add_keterangan').val()
                     },
                     success: function(response) {
-                        $('#addModal').modal('hide');
-                        $('#addForm')[0].reset();
+
+                        if (response.success) {
+                            // Create new event object
+                            var newEvent = {
+                                id: response.id,
+                                title: response.keterangan,
+                                start: response.tanggal,
+                                backgroundColor: 'red',
+                                extendedProps: {
+                                    keterangan: response.keterangan
+                                }
+                            };
+                            calendar.addEvent(newEvent);
+
+                            $('#addModal').modal('hide');
+                            $('#addForm')[0].reset();
+
+                            Lobibox.notify('success', {
+                                title: 'Berhasil',
+                                pauseDelayOnHover: true,
+                                continueDelayOnInactiveTab: false,
+                                position: 'top right',
+                                icon: 'bx bx-check-circle',
+                                msg: 'Data berhasil ditambahkan!'
+                            });
+
+                            // Refresh calendar to ensure sync
+                            calendar.refetchEvents();
+                        } else {
+                            console.error('Failed to add event:', response);
+                            alert('Gagal menambah data');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error adding event:', xhr.responseText);
+                        alert('Terjadi kesalahan saat menambah data: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            // Handle edit form submission
+            $('#editForm').on('submit', function(e) {
+                e.preventDefault();
+                var id = $('#hari_libur_id').val();
+
+                if (!id) {
+                    console.error('No ID found for edit');
+                    alert('ID hari libur tidak ditemukan!');
+                    return;
+                }
+
+                $.ajax({
+                    url: `${base_url}/update-hari-libur/` + id,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    method: 'PUT',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        tanggal: $('#edit_tanggal').val(),
+                        keterangan: $('#edit_keterangan').val()
+                    },
+                    success: function(response) {
+
+                        $('#editModal').modal('hide');
                         calendar.refetchEvents();
+
                         Lobibox.notify('success', {
                             title: 'Berhasil',
                             pauseDelayOnHover: true,
                             continueDelayOnInactiveTab: false,
                             position: 'top right',
                             icon: 'bx bx-check-circle',
-                            msg: 'Data berhasil ditambahkan!'
+                            msg: 'Data berhasil diupdate!'
                         });
                     },
-                    error: function() {
-                        alert('Terjadi kesalahan saat menambah data!');
+                    error: function(xhr) {
+                        console.error('Error updating:', xhr.responseText);
+                        alert('Terjadi kesalahan saat mengupdate data: ' + xhr.responseText);
                     }
                 });
+            });
+
+            // Handle delete button click
+            $('#deleteButton').on('click', function() {
+                var id = $('#hari_libur_id').val();
+
+                if (!id) {
+                    console.error('No ID found for delete');
+                    alert('ID hari libur tidak ditemukan!');
+                    return;
+                }
+
+                if (confirm('Apakah Anda yakin ingin menghapus hari libur ini?')) {
+                    $.ajax({
+                        url: `${base_url}/delete-hari-libur/` + id,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        method: 'DELETE',
+                        success: function(response) {
+                            console.log('Delete response:', response); // Debug log
+
+                            $('#editModal').modal('hide');
+                            calendar.refetchEvents();
+
+                            Lobibox.notify('success', {
+                                title: 'Berhasil',
+                                pauseDelayOnHover: true,
+                                continueDelayOnInactiveTab: false,
+                                position: 'top right',
+                                icon: 'bx bx-check-circle',
+                                msg: 'Data berhasil dihapus!'
+                            });
+                        },
+                        error: function(xhr) {
+                            console.error('Error deleting:', xhr.responseText);
+                            alert('Terjadi kesalahan saat menghapus data: ' + xhr.responseText);
+                        }
+                    });
+                }
             });
         });
     </script>
