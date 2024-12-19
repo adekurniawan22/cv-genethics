@@ -108,6 +108,7 @@
     <script src="<?= url('assets/onedash') ?>/plugins/fullcalendar/js/main.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script>
+        const base_url = '{{ url('/') }}';
         document.addEventListener('DOMContentLoaded', function() {
             function formatDate(date) {
                 var year = date.getFullYear();
@@ -144,7 +145,7 @@
                 events: function(info, successCallback, failureCallback) {
                     // Mengambil data hari libur dari server
                     $.ajax({
-                        url: '/get-hari-libur',
+                        url: `${base_url}/get-hari-libur`,
                         method: 'GET',
                         success: function(hariLibur) {
                             var events = hariLibur.map(function(item) {
@@ -201,7 +202,7 @@
                 var id = $('#hari_libur_id').val();
 
                 $.ajax({
-                    url: '/update-hari-libur/' + id,
+                    url: `${base_url}/update-hari-libur/` + id,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
@@ -235,7 +236,7 @@
 
                 if (confirm('Apakah Anda yakin ingin menghapus hari libur ini?')) {
                     $.ajax({
-                        url: '/delete-hari-libur/' + id,
+                        url: `${base_url}/delete-hari-libur/` + id,
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
@@ -264,7 +265,7 @@
                 e.preventDefault();
 
                 $.ajax({
-                    url: '/store-hari-libur',
+                    url: `${base_url}/store-hari-libur`,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
