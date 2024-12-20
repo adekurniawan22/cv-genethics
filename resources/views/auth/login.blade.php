@@ -113,8 +113,8 @@
                             </div>
                             <!-- Image banner -->
                             <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
-                                <img src="<?= url('assets/onedash') ?>/images/banner.png" class="img-fluid pb-2 pe-5"
-                                    alt="">
+                                <img src="<?= url('assets/onedash') ?>/images/logo-genethics-vector.svg"
+                                    class="img-fluid ps-3 pe-5" alt="" width="600px" style="min-height: 300px">
                             </div>
                         </div>
                     </div>

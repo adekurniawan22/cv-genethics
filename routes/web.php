@@ -161,7 +161,9 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('super/pesanan/store', [PesananController::class, 'store'])->name('super.pesanan.store');
         Route::get('super/pesanan/{id}/edit', [PesananController::class, 'edit'])->name('super.pesanan.edit');
         Route::put('super/pesanan/{id}', [PesananController::class, 'update'])->name('super.pesanan.update');
+        Route::put('super/pesanan/{id}/tandai-selesai', [PesananController::class, 'tandaiPesananSelesai'])->name('super.pesanan.tandai_selesai');
         Route::delete('super/pesanan/{id}', [PesananController::class, 'destroy'])->name('super.pesanan.destroy');
+        Route::get('super/cari-nama-pemesan', [PesananController::class, 'searchNamaPemesan']);
 
         // List Penjadwalan
         Route::get('super/penjadwalan', [PenjadwalanController::class, 'index'])

@@ -71,38 +71,65 @@
                                                 ? \Carbon\Carbon::parse($pesanan->tanggal_pengiriman)->locale('id_ID')->isoFormat('D MMMM YYYY')
                                                 : 'Tanggal tidak tersedia' }}
                                         </td>
-
                                         <td>
-                                            <div class="d-flex gap-3">
-                                                <button type="button" class="btn btn-sm btn-info text-white"
-                                                    data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                    data-pesanan-id="{{ $pesanan->pesanan_id }}">
-                                                    <i class="bi bi-eye-fill" style="margin-right: 2px !important"></i>
-                                                    Detail
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary btn-sm" type="button"
+                                                    id="dropdownMenuButton{{ $pesanan->pesanan_id }}"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots me-1"></i>
                                                 </button>
-                                                <?php if (session()->get('role') === 'admin' || session()->get('role') === 'super') :?>
-                                                <a href="{{ route(session()->get('role') . '.pesanan.edit', $pesanan->pesanan_id) }}"
-                                                    class="btn btn-sm btn-warning text-white d-flex align-items-center text-white">
-                                                    <i class="bi bi-pencil-fill me-1"></i> Edit
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                                    data-bs-target="#confirmDeleteModal"
-                                                    data-form-id="delete-form-{{ $pesanan->pesanan_id }}">
-                                                    <i class="bi bi-trash-fill"></i> Hapus
-                                                </button>
-                                                <form id="delete-form-{{ $pesanan->pesanan_id }}"
-                                                    action="{{ route(session()->get('role') . '.pesanan.destroy', $pesanan->pesanan_id) }}"
-                                                    method="POST" style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                                <?php endif;?>
+                                                <style>
+                                                    .dropdown-menu .dropdown-item:active {
+                                                        background: none !important;
+                                                    }
+                                                </style>
+                                                <ul class="dropdown-menu"
+                                                    aria-labelledby="dropdownMenuButton{{ $pesanan->pesanan_id }}">
+                                                    <li>
+                                                        <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                                                            data-bs-target="#detailModal"
+                                                            data-pesanan-id="{{ $pesanan->pesanan_id }}">
+                                                            <i class="bi bi-eye-fill me-2"></i>Detail
+                                                        </button>
+                                                    </li>
+
+                                                    <?php if (session()->get('role') === 'admin' || session()->get('role') === 'super') :?>
+                                                    @if ($pesanan->status != 'selesai')
+                                                        <li>
+                                                            <button type="button" class="dropdown-item tandai-selesai"
+                                                                data-id="{{ $pesanan->pesanan_id }}"
+                                                                data-url="{{ route(session()->get('role') . '.pesanan.tandai_selesai', $pesanan->pesanan_id) }}">
+                                                                <i class="bi bi-check2-circle me-2"></i>Tandai Selesai
+                                                            </button>
+                                                        </li>
+                                                    @endif
+
+                                                    <li>
+                                                        <a href="{{ route(session()->get('role') . '.pesanan.edit', $pesanan->pesanan_id) }}"
+                                                            class="dropdown-item">
+                                                            <i class="bi bi-pencil-fill me-2"></i>Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-danger"
+                                                            data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                                                            data-form-id="delete-form-{{ $pesanan->pesanan_id }}">
+                                                            <i class="bi bi-trash-fill me-2"></i>Hapus
+                                                        </button>
+                                                    </li>
+                                                    <form id="delete-form-{{ $pesanan->pesanan_id }}"
+                                                        action="{{ route(session()->get('role') . '.pesanan.destroy', $pesanan->pesanan_id) }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                    <?php endif;?>
+                                                </ul>
                                             </div>
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
-
                         </table>
                     </div>
                 </div>
@@ -263,6 +290,54 @@
                         pesananModalBody.innerHTML = '<p>Terjadi kesalahan saat mengambil data.</p>';
                     });
             }
+
+            document.querySelectorAll('.tandai-selesai').forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.url;
+                    const statusBadge = this.closest('tr').querySelector('.badge');
+
+                    fetch(url, {
+                            method: 'PUT',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Update status badge
+                                statusBadge.classList.remove('bg-warning');
+                                statusBadge.classList.add('bg-success');
+                                statusBadge.textContent = 'Selesai';
+
+                                // Hapus tombol tandai selesai
+                                this.closest('li').remove();
+
+                                Lobibox.notify('success', {
+                                    title: 'Berhasil',
+                                    pauseDelayOnHover: true,
+                                    continueDelayOnInactiveTab: false,
+                                    position: 'top right',
+                                    icon: 'bx bx-check-circle',
+                                    msg: 'Status pesanan berhasil di update'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Lobibox.notify('error', {
+                                title: 'Gagal',
+                                pauseDelayOnHover: true,
+                                continueDelayOnInactiveTab: false,
+                                position: 'top right',
+                                icon: 'bx bx-x-circle',
+                                msg: 'Status pesanan gagal di update'
+                            });
+                        });
+                });
+            });
 
         });
     </script>

@@ -146,6 +146,25 @@ class PesananController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function tandaiPesananSelesai($id)
+    {
+        try {
+            $pesanan = Pesanan::findOrFail($id);
+            $pesanan->status = 'selesai';
+            $pesanan->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil ditandai selesai'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengubah status pesanan'
+            ], 500);
+        }
+    }
+
     public function detail(Pesanan $pesanan)
     {
         $pesananDetail = PesananDetail::with(['produk' => function ($query) {

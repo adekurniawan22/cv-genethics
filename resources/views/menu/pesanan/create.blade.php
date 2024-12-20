@@ -107,7 +107,7 @@
                                                 <tr>
                                                     <th>Produk</th>
                                                     <th>Jumlah</th>
-                                                    <th>Aksi</th>
+                                                    <th id="thAksi" style="display: none">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="detailPesanan">
@@ -127,7 +127,7 @@
                                                         <input type="number" name="jumlah[]"
                                                             class="form-control jumlah-input" min="1">
                                                     </td>
-                                                    <td>
+                                                    <td class="thTdAksi" style="display: none">
                                                         <button type="button" class="btn btn-sm btn-danger removeRow"
                                                             style="display: none;">
                                                             <i class="bi bi-trash-fill"></i>
@@ -280,7 +280,7 @@
                     <td>
                         <input type="number" name="jumlah[]" class="form-control jumlah-input" min="1" >
                     </td>
-                    <td>
+                    <td class="thTdAksi" style="display:none">
                         <button type="button" class="btn btn-sm btn-danger removeRow">
                             <i class="bi bi-trash-fill"></i>
                         </button>
@@ -320,10 +320,26 @@
             }
 
             function updateRemoveButtons() {
+                const detailPesananBody = document.getElementById('detailPesanan');
                 const removeButtons = detailPesananBody.querySelectorAll('.removeRow');
+                const rows = detailPesananBody.querySelectorAll('tr');
+                const thAksi = document.getElementById('thAksi');
+
                 removeButtons.forEach(function(button) {
-                    button.style.display = removeButtons.length > 1 ? 'inline-block' : 'none';
+                    button.style.display = rows.length > 1 ? 'inline-block' : 'none';
                 });
+
+                if (rows.length > 1) {
+                    thAksi.style.display = 'table-cell';
+                    document.querySelectorAll('.thTdAksi').forEach(function(td) {
+                        td.style.display = 'table-cell';
+                    });
+                } else {
+                    thAksi.style.display = 'none';
+                    document.querySelectorAll('.thTdAksi').forEach(function(td) {
+                        td.style.display = 'none';
+                    });
+                }
             }
 
             function updateAddRowButton() {
