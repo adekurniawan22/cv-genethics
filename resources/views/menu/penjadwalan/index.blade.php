@@ -24,7 +24,7 @@
         </div>
 
         <div class="row ms-0 me-1">
-            <div class="col-2">
+            <div class="ps-0 pe-1 col-2">
                 <div class="card radius-10">
                     <div class="card-body">
                         <div class="align-items-center gap-2 ms-0" style="max-width:500px">
@@ -70,7 +70,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-10">
+            <div class="col-10 pe-0">
                 <div class="card radius-10">
                     <div class="card-body">
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
