@@ -17,7 +17,7 @@
                             <a href="{{ route(session()->get('role') . '.dashboard') }}"><i class="bx bx-home-alt"></i></a>
                         </li>
                         <li class="breadcrumb-item" aria-current="page">
-                            <span class="text-dark">Mesin</span>
+                            <span class="text-dark">Hari Libur</span>
                         </li>
                     </ol>
                 </nav>
@@ -112,6 +112,7 @@
     <script src="https://unpkg.com/tippy.js@6"></script>
     <script>
         const base_url = '{{ url('/') }}';
+        const role = '{{ session()->get('role') }}';
         moment.locale('id');
         document.addEventListener('DOMContentLoaded', function() {
             function formatDate(date) {
@@ -149,7 +150,7 @@
                 businessHours: true,
                 events: function(info, successCallback, failureCallback) {
                     $.ajax({
-                        url: `${base_url}/get-hari-libur`,
+                        url: `${base_url}/${role}/get-hari-libur`,
                         method: 'GET',
                         success: function(hariLibur) {
                             var events = hariLibur.map(function(item) {
@@ -246,7 +247,7 @@
                 e.preventDefault();
 
                 $.ajax({
-                    url: `${base_url}/store-hari-libur`,
+                    url: `${base_url}/${role}/store-hari-libur`,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
@@ -309,7 +310,7 @@
                 }
 
                 $.ajax({
-                    url: `${base_url}/update-hari-libur/` + id,
+                    url: `${base_url}/${role}/update-hari-libur/` + id,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
@@ -352,7 +353,7 @@
 
                 if (confirm('Apakah Anda yakin ingin menghapus hari libur ini?')) {
                     $.ajax({
-                        url: `${base_url}/delete-hari-libur/` + id,
+                        url: `${base_url}/${role}/delete-hari-libur/` + id,
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },

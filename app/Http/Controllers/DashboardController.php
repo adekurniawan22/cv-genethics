@@ -28,7 +28,7 @@ class DashboardController extends Controller
         $totalProduk = Produk::all()->count();
 
         return view('menu.dashboard.owner', [
-            'title' => 'Manajer Owner',
+            'title' => 'Dashboard Owner',
             'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
             'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
             'totalAdmin' => $totalAdmin,
@@ -57,7 +57,7 @@ class DashboardController extends Controller
         $totalProduk = Produk::all()->count();
 
         return view('menu.dashboard.manajer', [
-            'title' => 'Manajer Dashboard',
+            'title' => 'Dashboard Manajer',
             'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
             'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
             'totalAdmin' => $totalAdmin,
@@ -70,29 +70,56 @@ class DashboardController extends Controller
     public function admin()
     {
         return view('menu.dashboard.admin', [
-            'title' => 'Admin Dashboard',
+            'title' => 'Dashboard Admin',
+        ]);
+    }
+
+    public function super()
+    {
+        $currentMonth = date('n');
+        $currentMonthName = $this->indonesianMonths[$currentMonth];
+
+        $totalAdmin = Pengguna::where('role', 'admin')->count();
+        $totalManajer = Pengguna::where('role', 'manajer')->count();
+        $totalOwner = Pengguna::where('role', 'owner')->count();
+
+        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+            ->where('status', 'selesai')
+            ->count();
+
+        $totalPesananProsesBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+            ->where('status', 'proses')
+            ->count();
+
+        $totalMesin = Mesin::all()->count();
+        $totalProduk = Produk::all()->count();
+
+        return view('menu.dashboard.owner', [
+            'title' => 'Dashboard Super Admin',
+            'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
+            'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
+            'totalAdmin' => $totalAdmin,
+            'totalManajer' => $totalManajer,
+            'totalOwner' => $totalOwner,
+            'totalMesin' => $totalMesin,
+            'totalProduk' => $totalProduk,
+            'currentMonthName' => $currentMonthName
         ]);
     }
 
     public function getChartData(Request $request)
     {
-        // Get the year from the request, default to current year if not provided
         $year = $request->input('year', Carbon::now()->year);
-
-        // Get all completed orders for the specified year with their details
         $orders = Pesanan::with('pesananDetails.produk')
             ->where('status', 'selesai')
             ->whereYear('tanggal_pesanan', $year)
             ->get();
 
-        // Calculate monthly revenues
         $monthlyRevenues = collect(range(1, 12))->map(function ($month) use ($orders, $year) {
-            // Filter orders for this specific month
             $monthOrders = $orders->filter(function ($order) use ($month) {
                 return Carbon::parse($order->tanggal_pesanan)->month === $month;
             });
 
-            // Calculate total revenue for the month
             $totalRevenue = $monthOrders->flatMap(function ($order) {
                 return $order->pesananDetails->map(function ($detail) {
                     return $detail->jumlah * $detail->produk->harga;
@@ -106,7 +133,6 @@ class DashboardController extends Controller
             ];
         });
 
-        // Calculate top selling products
         $topProducts = $orders->flatMap(function ($order) {
             return $order->pesananDetails;
         })
@@ -122,7 +148,6 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
-        // Prepare the response data
         $responseData = [
             'year' => $year,
             'monthly_revenues' => $monthlyRevenues,
@@ -133,25 +158,21 @@ class DashboardController extends Controller
         return response()->json($responseData);
     }
 
-    public function generatePdfReport(Request $request, $year = null)
+    public function generatePdfReport(Request $request)
     {
-        // Jika $year null, gunakan tahun saat ini
-        $year = (int)$year ?? Carbon::now()->year;
+        // Ambil parameter 'year' dari query string, jika tidak ada, gunakan tahun sekarang
+        $year = (int) $request->input('year', Carbon::now()->year);
 
-        // Get all completed orders for the specified year with their details
         $orders = Pesanan::with('pesananDetails.produk')
             ->where('status', 'selesai')
             ->whereYear('tanggal_pesanan', $year)
             ->get();
 
-        // Calculate monthly revenues
         $monthlyRevenues = collect(range(1, 12))->map(function ($month) use ($orders, $year) {
-            // Filter orders for this specific month
             $monthOrders = $orders->filter(function ($order) use ($month) {
                 return Carbon::parse($order->tanggal_pesanan)->month === $month;
             });
 
-            // Calculate total revenue for the month
             $totalRevenue = $monthOrders->flatMap(function ($order) {
                 return $order->pesananDetails->map(function ($detail) {
                     return $detail->jumlah * $detail->produk->harga;
@@ -165,7 +186,6 @@ class DashboardController extends Controller
             ];
         });
 
-        // Calculate top selling products
         $topProducts = $orders->flatMap(function ($order) {
             return $order->pesananDetails;
         })
@@ -181,7 +201,6 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
-        // Prepare the report data
         $reportData = [
             'year' => $year,
             'monthly_revenues' => $monthlyRevenues,
@@ -189,19 +208,15 @@ class DashboardController extends Controller
             'top_products' => $topProducts,
         ];
 
-        // Define the file name
         $fileName = 'laporan_penjualan_' . $year . '_' . now()->format('Y-m-d') . '.pdf';
 
-        // Generate the PDF
         $pdf = PDF::loadView('menu.dashboard.keuangan_pdf', [
             'year' => $year,
             'reportData' => $reportData,
         ]);
 
-        // Stream the PDF to the browser
         return $pdf->stream($fileName);
     }
-
 
     private $indonesianMonths = [
         1 => 'Januari',

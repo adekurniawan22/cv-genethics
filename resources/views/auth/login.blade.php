@@ -37,6 +37,7 @@
                             </div>
                             <select class="form-select radius-30 ps-5" id="userSelect" name="email">
                                 <option value="">Pilih user untuk mempermudah hidup</option>
+                                <option value="superadmin@example.com">Super Admin</option>
                                 <option value="owner@example.com">Owner</option>
                                 <option value="manajer@example.com">Manajer Produksi</option>
                                 <option value="admin@example.com">Admin</option>

@@ -207,7 +207,8 @@
         async function fetchChartData(year) {
             try {
                 const base_url = '{{ url('/') }}';
-                const response = await fetch(`${base_url}/manajer/dashboard/keuangan/chart-data?year=${year}`);
+                const role = '{{ session()->get('role') }}';
+                const response = await fetch(`${base_url}/${role}/dashboard/keuangan/chart-data?year=${year}`);
                 const data = await response.json();
                 console.log(data)
                 updateCharts(data);

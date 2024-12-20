@@ -38,15 +38,22 @@ class AuthController extends Controller
 
         $user = Pengguna::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return redirect()->back()
-                ->withInput($request->only('email', 'password'));
+                ->withInput($request->only('email', 'password'))
+                ->with('error', 'Akun anda tidak ditemukan');
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return redirect()->back()
+                ->withInput($request->only('email', 'password'))
+                ->with('error', 'Password anda salah');
         }
 
         if ($user->status_akun != "aktif") {
             return redirect()->back()
                 ->withInput($request->only('email', 'password'))
-                ->with('error', 'Akun anda tidak aktif');;
+                ->with('error', 'Akun anda tidak aktif');
         }
 
         // Set session untuk pengguna dan role
@@ -74,6 +81,8 @@ class AuthController extends Controller
             return redirect()->route('manajer.dashboard')->with('success', 'Selamat datang di menu Manajer');
         } elseif ($role == 'admin') {
             return redirect()->route('admin.dashboard')->with('success', 'Selamat datang di menu Admin');
+        } elseif ($role == 'super') {
+            return redirect()->route('super.dashboard')->with('success', 'Selamat datang di menu Super Admin');
         } else {
             return redirect()->back()->withErrors(['error' => 'Role tidak dikenali']);
         }

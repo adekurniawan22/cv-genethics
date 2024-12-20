@@ -18,7 +18,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('owner/dashboard', [DashboardController::class, 'owner'])->name('owner.dashboard');
         Route::get('owner/dashboard/keuangan/chart-data/{year?}', [DashboardController::class, 'getChartData'])
             ->name('dashboard.keuangan.chart-data');
-        Route::get('owner/dashboard/keuangan/pdf-report/{year?}', [DashboardController::class, 'generatePdfReport'])
+        Route::get('owner/dashboard/keuangan/pdf-report', [DashboardController::class, 'generatePdfReport'])
             ->name('owner.dashboard.keuangan.pdf-report');
 
         // List Pesanan
@@ -40,10 +40,10 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/dashboard', [DashboardController::class, 'manajer'])->name('manajer.dashboard');
         Route::get('manajer/dashboard/keuangan/chart-data/{year?}', [DashboardController::class, 'getChartData'])
             ->name('dashboard.keuangan.chart-data');
-        Route::get('manajer/dashboard/keuangan/pdf-report/{year?}', [DashboardController::class, 'generatePdfReport'])
+        Route::get('manajer/dashboard/keuangan/pdf-report', [DashboardController::class, 'generatePdfReport'])
             ->name('manajer.dashboard.keuangan.pdf-report');
 
-        // CRUD HariLibur
+        // CRUD Hari Libur
         Route::get('manajer/hari-libur', [HariLiburController::class, 'index'])->name('manajer.hari_libur.index');
         Route::get('manajer/hari-libur/create', [HariLiburController::class, 'create'])->name('manajer.hari_libur.create');
         Route::post('manajer/hari-libur', [HariLiburController::class, 'store'])->name('manajer.hari_libur.store');
@@ -73,32 +73,27 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/pesanan/detail/{pesananDetail}/detail', [PesananDetailController::class, 'detail'])->name('manajer.pesanan.pesanan_detail');
 
         // List Penjadwalan
-        Route::middleware(['role:manajer'])->group(function () {
-            Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
-                ->name('manajer.penjadwalan.index')
-                ->defaults('limit', 50)
-                ->where([
-                    'limit' => '[0-9]+',
-                    'date' => '\d{4}-\d{2}-\d{2}',
-                ]);
-        });
+        Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
+            ->name('manajer.penjadwalan.index')
+            ->defaults('limit', 50)
+            ->where([
+                'limit' => '[0-9]+',
+                'date' => '\d{4}-\d{2}-\d{2}',
+            ]);
 
-        Route::middleware(['role:manajer'])->group(function () {
-            Route::get('manajer/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
-                ->name('manajer.penjadwalan.pdf')
-                ->defaults('limit', 50)
-                ->where([
-                    'limit' => '[0-9]+',
-                    'date' => '\d{4}-\d{2}-\d{2}',
-                ]);
-        });
+        Route::get('manajer/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
+            ->name('manajer.penjadwalan.pdf')
+            ->defaults('limit', 50)
+            ->where([
+                'limit' => '[0-9]+',
+                'date' => '\d{4}-\d{2}-\d{2}',
+            ]);
 
-        // Hari Libur
-        // Route::get('manajer/produk', [ProdukController::class, 'index'])->name('manajer.produk.index');
-        Route::get('/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('get.hari.libur');
-        Route::post('/store-hari-libur', [HariLiburController::class, 'storeHariLibur'])->name('store.hari.libur');
-        Route::put('/update-hari-libur/{id}', [HariLiburController::class, 'updateHariLibur'])->name('update.hari.libur');
-        Route::delete('/delete-hari-libur/{id}', [HariLiburController::class, 'deleteHariLibur'])->name('delete.hari.libur');
+        // CRUD Hari Libur
+        Route::get('manajer/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('manajer.hari_libur.index');
+        Route::post('manajer/store-hari-libur', [HariLiburController::class, 'storeHariLibur'])->name('manajer.hari_libur.store');
+        Route::put('manajer/update-hari-libur/{id}', [HariLiburController::class, 'updateHariLibur'])->name('manajer.hari_libur.update');
+        Route::delete('manajer/delete-hari-libur/{id}', [HariLiburController::class, 'deleteHariLibur'])->name('manajer.hari_libur.destroy');
     });
 
     // Routes untuk Admin
@@ -114,5 +109,80 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('admin/pesanan/{id}/edit', [PesananController::class, 'edit'])->name('admin.pesanan.edit');
         Route::put('admin/pesanan/{id}', [PesananController::class, 'update'])->name('admin.pesanan.update');
         Route::delete('admin/pesanan/{id}', [PesananController::class, 'destroy'])->name('admin.pesanan.destroy');
+    });
+
+    // Routes untuk Super
+    Route::middleware(['role:super'])->group(function () {
+        // Dashboard
+        Route::get('super/dashboard', [DashboardController::class, 'super'])->name('super.dashboard');
+        Route::get('super/dashboard/keuangan/chart-data/{year?}', [DashboardController::class, 'getChartData'])
+            ->name('dashboard.keuangan.chart-data');
+        Route::get('super/dashboard/keuangan/pdf-report', [DashboardController::class, 'generatePdfReport'])
+            ->name('super.dashboard.keuangan.pdf-report');
+
+        // CRUD Pengguna
+        Route::get('super/pengguna', [PenggunaController::class, 'index'])->name('super.pengguna.index');
+        Route::get('super/pengguna/create', [PenggunaController::class, 'create'])->name('super.pengguna.create');
+        Route::post('super/pengguna', [PenggunaController::class, 'store'])->name('super.pengguna.store');
+        Route::get('super/pengguna/{id}/edit', [PenggunaController::class, 'edit'])->name('super.pengguna.edit');
+        Route::put('super/pengguna/{id}', [PenggunaController::class, 'update'])->name('super.pengguna.update');
+        Route::delete('super/pengguna/{id}', [PenggunaController::class, 'destroy'])->name('super.pengguna.destroy');
+
+        // CRUD Hari Libur
+        Route::get('super/hari-libur', [HariLiburController::class, 'index'])->name('super.hari_libur.index');
+        Route::get('super/hari-libur/create', [HariLiburController::class, 'create'])->name('super.hari_libur.create');
+        Route::post('super/hari-libur', [HariLiburController::class, 'store'])->name('super.hari_libur.store');
+        Route::get('super/hari-libur/{id}/edit', [HariLiburController::class, 'edit'])->name('super.hari_libur.edit');
+        Route::put('super/hari-libur/{id}', [HariLiburController::class, 'update'])->name('super.hari_libur.update');
+        Route::delete('super/hari-libur/{id}', [HariLiburController::class, 'destroy'])->name('super.hari_libur.destroy');
+
+        // CRUD Mesin
+        Route::get('super/mesin', [MesinController::class, 'index'])->name('super.mesin.index');
+        Route::get('super/mesin/create', [MesinController::class, 'create'])->name('super.mesin.create');
+        Route::post('super/mesin', [MesinController::class, 'store'])->name('super.mesin.store');
+        Route::get('super/mesin/{id}/edit', [MesinController::class, 'edit'])->name('super.mesin.edit');
+        Route::put('super/mesin/{id}', [MesinController::class, 'update'])->name('super.mesin.update');
+        Route::delete('super/mesin/{id}', [MesinController::class, 'destroy'])->name('super.mesin.destroy');
+
+        // CRUD Produk
+        Route::get('super/produk', [ProdukController::class, 'index'])->name('super.produk.index');
+        Route::get('super/produk/create', [ProdukController::class, 'create'])->name('super.produk.create');
+        Route::post('super/produk', [ProdukController::class, 'store'])->name('super.produk.store');
+        Route::get('super/produk/{id}/edit', [ProdukController::class, 'edit'])->name('super.produk.edit');
+        Route::put('super/produk/{id}', [ProdukController::class, 'update'])->name('super.produk.update');
+        Route::delete('super/produk/{id}', [ProdukController::class, 'destroy'])->name('super.produk.destroy');
+
+        // List Pesanan
+        Route::get('super/pesanan', [PesananController::class, 'index'])->name('super.pesanan.index');
+        Route::get('super/pesanan/{pesanan}/detail', [PesananController::class, 'detail'])->name('super.pesanan.detail');
+        Route::get('super/pesanan/detail/{pesananDetail}/detail', [PesananDetailController::class, 'detail'])->name('super.pesanan.pesanan_detail');
+        Route::get('super/pesanan/create', [PesananController::class, 'create'])->name('super.pesanan.create');
+        Route::post('super/pesanan/store', [PesananController::class, 'store'])->name('super.pesanan.store');
+        Route::get('super/pesanan/{id}/edit', [PesananController::class, 'edit'])->name('super.pesanan.edit');
+        Route::put('super/pesanan/{id}', [PesananController::class, 'update'])->name('super.pesanan.update');
+        Route::delete('super/pesanan/{id}', [PesananController::class, 'destroy'])->name('super.pesanan.destroy');
+
+        // List Penjadwalan
+        Route::get('super/penjadwalan', [PenjadwalanController::class, 'index'])
+            ->name('super.penjadwalan.index')
+            ->defaults('limit', 50)
+            ->where([
+                'limit' => '[0-9]+',
+                'date' => '\d{4}-\d{2}-\d{2}',
+            ]);
+
+        Route::get('super/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
+            ->name('super.penjadwalan.pdf')
+            ->defaults('limit', 50)
+            ->where([
+                'limit' => '[0-9]+',
+                'date' => '\d{4}-\d{2}-\d{2}',
+            ]);
+
+        // CRUD Hari Libur
+        Route::get('super/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('super.hari_libur.index');
+        Route::post('super/store-hari-libur', [HariLiburController::class, 'storeHariLibur'])->name('super.hari_libur.store');
+        Route::put('super/update-hari-libur/{id}', [HariLiburController::class, 'updateHariLibur'])->name('super.hari_libur.update');
+        Route::delete('super/delete-hari-libur/{id}', [HariLiburController::class, 'deleteHariLibur'])->name('super.hari_libur.destroy');
     });
 });

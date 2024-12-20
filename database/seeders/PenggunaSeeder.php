@@ -12,7 +12,16 @@ class PenggunaSeeder extends Seeder
     {
         DB::table('pengguna')->insert([
             [
-                'nama' => 'John Doe',
+                'nama' => 'Boboiboy',
+                'email' => 'superadmin@example.com',
+                'password' => Hash::make('password'),
+                'status_akun' => 'aktif',
+                'role' => 'super',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nama' => 'Yandi Sophian',
                 'email' => 'owner@example.com',
                 'password' => Hash::make('password'),
                 'status_akun' => 'aktif',
@@ -21,7 +30,7 @@ class PenggunaSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama' => 'Jane Smith',
+                'nama' => 'Furkon',
                 'email' => 'manajer@example.com',
                 'password' => Hash::make('password'),
                 'status_akun' => 'aktif',
@@ -30,7 +39,7 @@ class PenggunaSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama' => 'Bob Johnson',
+                'nama' => 'Riswan Gani',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
                 'status_akun' => 'aktif',

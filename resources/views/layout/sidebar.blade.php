@@ -90,6 +90,58 @@
                 </a>
             </li>
         @endif
+
+        {{-- Role Super Super Admin --}}
+        @if (session('role') == 'super')
+            <li class="{{ Request::is('super/dashboard*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/dashboard') ?>">
+                    <div class="parent-icon"><i class="bi bi-speedometer2"></i></div>
+                    <div class="menu-title">Dashboard</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/pengguna*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/pengguna') ?>">
+                    <div class="parent-icon"><i class="bi bi-people-fill"></i></div>
+                    <div class="menu-title">Pengguna</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/mesin*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/mesin') ?>">
+                    <div class="parent-icon"><i class="bi bi-gear-fill"></i></div>
+                    <div class="menu-title">Mesin</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/hari-libur*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/hari-libur') ?>">
+                    <div class="parent-icon"><i class="bi bi-calendar-date-fill"></i></div>
+                    <div class="menu-title">Hari Libur</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/produk*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/produk') ?>">
+                    <div class="parent-icon"><i class="bi bi-box-seam"></i></div>
+                    <div class="menu-title">Produk</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/pesanan*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/pesanan') ?>">
+                    <div class="parent-icon"><i class="bi bi-bag-fill"></i></div>
+                    <div class="menu-title">Pesanan</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/penjadwalan*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/penjadwalan') ?>">
+                    <div class="parent-icon"><i class="bi bi-calendar-week-fill"></i></div>
+                    <div class="menu-title">Penjadwalan</div>
+                </a>
+            </li>
+        @endif
     </ul>
     <!--end navigation-->
 </aside>

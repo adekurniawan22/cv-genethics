@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('email', 100)->unique();
             $table->string('password');
             $table->enum('status_akun', ['aktif', 'tidak aktif']);
-            $table->enum('role', ['owner', 'manajer', 'admin']);
+            $table->enum('role', ['super','owner', 'manajer', 'admin']);
             $table->timestamps();
         });
     }

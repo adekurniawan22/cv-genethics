@@ -24,6 +24,37 @@
             </div>
         </div>
         <div class="row">
+            @if (session('role') == 'super')
+                <div class="col-xl-3 col-md-6">
+                    <div class="card radius-10 bg-purple-gradient">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <p class="mb-0 text-dark">Jumlah Owner</p>
+                                    <h4 class="my-1 text-dark">{{ $totalOwner }}</h4>
+                                </div>
+                                <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card radius-10 bg-purple-gradient">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <p class="mb-0 text-dark">Jumlah Manajer</p>
+                                    <h4 class="my-1 text-dark">{{ $totalManajer }}</h4>
+                                </div>
+                                <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="col-xl-3 col-md-6">
                 <div class="card radius-10 bg-purple-gradient">
                     <div class="card-body">
@@ -111,7 +142,7 @@
                         <h4 class="card-title mb-0 me-auto">Laporan Penjualan</h4>
                         <div class="d-flex align-items-center">
                             <a id="downloadPDF"
-                                href="{{ route('owner.dashboard.keuangan.pdf-report', ['year' => request('year', now()->year)]) }}"
+                                href="{{ route(session()->get('role') . '.dashboard.keuangan.pdf-report', ['year' => request('year', now()->year)]) }}"
                                 target="_blank" class="btn btn-success me-2 py-1">
                                 <i class="lni lni-download"></i> Download PDF
                             </a>
@@ -160,6 +191,8 @@
 
     <script>
         // Chart configuration
+        const base_url = '{{ url('/') }}';
+        const role = '{{ session()->get('role') }}';
         let revenueChart = null;
         let productChart = null;
 
@@ -168,9 +201,8 @@
 
         // Update URL download berdasarkan tahun yang dipilih
         function updateDownloadUrl() {
-            const year = yearSelect.value || new Date().getFullYear(); // Gunakan tahun saat ini sebagai fallback
-            downloadBtn.href = `{{ route('owner.dashboard.keuangan.pdf-report', ['year' => ':year']) }}`.replace(':year',
-                year);
+            const year = yearSelect.value || new Date().getFullYear();
+            downloadBtn.href = `${base_url}/${role}/dashboard/keuangan/pdf-report?year=${year}`;
         }
 
         // Event listener untuk update URL saat tahun dipilih
@@ -206,8 +238,7 @@
         // Fetch and update chart data
         async function fetchChartData(year) {
             try {
-                const base_url = '{{ url('/') }}';
-                const response = await fetch(`${base_url}/owner/dashboard/keuangan/chart-data?year=${year}`);
+                const response = await fetch(`${base_url}/${role}/dashboard/keuangan/chart-data?year=${year}`);
                 const data = await response.json();
                 console.log(data)
                 updateCharts(data);

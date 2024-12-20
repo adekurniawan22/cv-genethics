@@ -15,7 +15,7 @@
                     </ol>
                 </nav>
             </div>
-            <?php if (session()->get('role') === 'admin') :?>
+            <?php if (session()->get('role') === 'admin' || session()->get('role') === 'super') :?>
             <div class="ms-auto">
                 <a href="{{ route(session()->get('role') . '.pesanan.create') }}" class="btn btn-danger">
                     <i class="fadeIn animated bx bx-plus"></i>Tambah
@@ -80,7 +80,7 @@
                                                     <i class="bi bi-eye-fill" style="margin-right: 2px !important"></i>
                                                     Detail
                                                 </button>
-                                                <?php if (session()->get('role') === 'admin') :?>
+                                                <?php if (session()->get('role') === 'admin' || session()->get('role') === 'super') :?>
                                                 <a href="{{ route(session()->get('role') . '.pesanan.edit', $pesanan->pesanan_id) }}"
                                                     class="btn btn-sm btn-warning text-white d-flex align-items-center text-white">
                                                     <i class="bi bi-pencil-fill me-1"></i> Edit

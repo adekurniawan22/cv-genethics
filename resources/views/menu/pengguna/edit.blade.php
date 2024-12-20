@@ -50,6 +50,11 @@
                             <label class="form-label" for="role">Role</label>
                             <select id="role" name="role" class="form-select @error('role') is-invalid @enderror">
                                 <option value="">Pilih Role</option>
+                                @if (session()->get('role') === 'super')
+                                    <option value="owner" {{ old('role', $pengguna->role) == 'owner' ? 'selected' : '' }}>
+                                        Owner
+                                    </option>
+                                @endif
                                 <option value="manajer" {{ old('role', $pengguna->role) == 'manajer' ? 'selected' : '' }}>
                                     Manajer Produksi
                                 </option>

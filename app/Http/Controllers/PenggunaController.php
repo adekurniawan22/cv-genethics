@@ -17,18 +17,23 @@ class PenggunaController extends Controller
     public function __construct()
     {
         // Contoh jika middleware dibutuhkan untuk role "owner"
-
     }
 
     // Index method (show all users)
     public function index()
     {
-        $data = Pengguna::all();
+        if (session()->get('role') === 'super') {
+            $data = Pengguna::all();
+        } else {
+            $data = Pengguna::whereIn('role', ['admin', 'manajer'])->get();
+        }
+
         return view('menu.pengguna.index', [
             'data' => $data,
             'title' => self::TITLE_INDEX
         ]);
     }
+
 
     // Create method (show form for creating new user)
     public function create()
