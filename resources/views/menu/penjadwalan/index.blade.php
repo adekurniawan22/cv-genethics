@@ -28,7 +28,7 @@
                 <div class="card radius-10">
                     <div class="card-body">
                         <div class="align-items-center gap-2 ms-0" style="max-width:500px">
-                            <form action="{{ route('manajer.penjadwalan.index') }}" method="GET">
+                            <form action="{{ route(session()->get('role') . '.penjadwalan.index') }}" method="GET">
                                 <div class="row g-3">
                                     <!-- Tanggal Mulai -->
                                     <div class="col-12">
@@ -55,7 +55,7 @@
                                             </div>
                                             <div class="col-12">
                                                 <a id="downloadPDF"
-                                                    href="{{ route('manajer.penjadwalan.pdf', ['limit' => request('limit', 50), 'date' => request('date', \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'))]) }}"
+                                                    href="{{ route(session()->get('role') . '.penjadwalan.pdf', ['limit' => request('limit', 50), 'date' => request('date', \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'))]) }}"
                                                     target="_blank" class="btn btn-danger mr-2 w-100">
                                                     <i class="lni lni-download"></i> PDF
                                                 </a>
@@ -520,32 +520,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            function formatDateIndonesia(dateString) {
-                const months = {
-                    'January': 'Januari',
-                    'February': 'Februari',
-                    'March': 'Maret',
-                    'April': 'April',
-                    'May': 'Mei',
-                    'June': 'Juni',
-                    'July': 'Juli',
-                    'August': 'Agustus',
-                    'September': 'September',
-                    'October': 'Oktober',
-                    'November': 'November',
-                    'December': 'Desember'
-                };
-
-                const date = new Date(dateString);
-                const day = date.getDate();
-                const monthIndex = date.toLocaleString('en-US', {
-                    month: 'long'
-                });
-                const year = date.getFullYear();
-
-                return `${day} ${months[monthIndex]} ${year}`;
-            }
-
             const jadwalProduksi = document.querySelectorAll('.jadwal-produksi');
             jadwalProduksi.forEach(row => {
                 row.addEventListener('click', function() {
@@ -582,8 +556,9 @@
             function updateLink() {
                 const date = document.querySelector('#date').value;
                 const limit = document.querySelector('#limit').value;
-                const url = new URL('{{ route('manajer.penjadwalan.index') }}');
-                const urlPDF = new URL('{{ route('manajer.penjadwalan.pdf') }}');
+
+                const url = new URL(`{{ url('${role}/penjadwalan') }}`);
+                const urlPDF = new URL(`{{ url('${role}/penjadwalan/pdf') }}`);
 
                 // Set query parameters
                 url.searchParams.set('date', date);
