@@ -225,7 +225,7 @@
                                                 <th class="py-3 px-4 bg-dark text-white border-light text-center">Total
                                                 </th>
                                                 @foreach ($allDates as $date)
-                                                    <th class="p-3 bg-dark text-white border-light">
+                                                    <th class="p-3 bg-dark text-center text-white border-light">
                                                         {{ Carbon\Carbon::parse($date)->locale('id')->translatedFormat('d M Y') }}
                                                     </th>
                                                 @endforeach
@@ -247,8 +247,9 @@
                                                             @endif
                                                         </td>
                                                         @foreach ($allDates as $date)
-                                                            <td class="text-center"
+                                                            <td class="text-center px-3"
                                                                 style="
+                                                                vertical-align: middle;
                                                                     @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date])) background-color: green; color: white;
                                                                     @elseif (array_key_exists(Carbon\Carbon::parse($date)->format('Y-m-d'), $hariLibur)) 
                                                                         background-color: red; color: white; 
@@ -259,32 +260,37 @@
 
                                                                 @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date]))
                                                                     @if (count($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details']) > 1)
-                                                                        <ul style="padding-left: 0;margin-bottom:0;">
+                                                                        <ul class="list-unstyled mb-0">
                                                                             @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
-                                                                                <li class="mb-1 mt-1 mx-0 my-0">
-                                                                                    <span>
-                                                                                        {{ $pesananDetail['jumlah'] }} item
+                                                                                <li class="mb-2">
+                                                                                    <div
+                                                                                        class="d-flex justify-content-center gap-2 align-items-center">
+                                                                                        <span>{{ $pesananDetail['jumlah'] }}
+                                                                                            item</span>
                                                                                         <button
                                                                                             class="btn btn-sm btn-primary jadwal-produksi-mesin"
                                                                                             data-pesanan-detail-id="{{ $pesananDetail['pesanan_detail_id'] }}">
                                                                                             Detail
                                                                                         </button>
-                                                                                    </span>
+                                                                                    </div>
                                                                                 </li>
                                                                             @endforeach
                                                                         </ul>
                                                                     @else
-                                                                        @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
-                                                                            <span>
-                                                                                {{ $pesananDetail['jumlah'] }} item
-                                                                                <br>
-                                                                                <button
-                                                                                    class="btn btn-sm btn-primary jadwal-produksi-mesin"
-                                                                                    data-pesanan-detail-id="{{ $pesananDetail['pesanan_detail_id'] }}">
-                                                                                    Detail
-                                                                                </button>
-                                                                            </span>
-                                                                        @endforeach
+                                                                        <div class="d-flex flex-column">
+                                                                            @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
+                                                                                <div
+                                                                                    class="d-flex justify-content-center gap-2 align-items-center">
+                                                                                    <span>{{ $pesananDetail['jumlah'] }}
+                                                                                        item</span>
+                                                                                    <button
+                                                                                        class="btn btn-sm btn-primary jadwal-produksi-mesin"
+                                                                                        data-pesanan-detail-id="{{ $pesananDetail['pesanan_detail_id'] }}">
+                                                                                        Detail
+                                                                                    </button>
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
                                                                     @endif
                                                                 @elseif (array_key_exists(Carbon\Carbon::parse($date)->format('Y-m-d'), $hariLibur))
                                                                     {{ $hariLibur[Carbon\Carbon::parse($date)->format('Y-m-d')] }}
@@ -293,6 +299,7 @@
                                                                 @else
                                                                     -
                                                                 @endif
+
                                                             </td>
                                                         @endforeach
                                                     </tr>
