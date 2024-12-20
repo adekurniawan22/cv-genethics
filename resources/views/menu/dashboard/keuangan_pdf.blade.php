@@ -95,7 +95,7 @@
                 @foreach ($reportData['top_products'] as $product)
                     <tr>
                         <td>{{ $product['name'] }}</td>
-                        <td>{{ $product['total_sold'] }} pcs</td>
+                        <td>{{ $product['total_sold'] }} item</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -103,6 +103,38 @@
     @else
         <div class="no-data">
             <p>Tidak ada data produk terlaris yang tersedia.</p>
+        </div>
+    @endif
+
+    <h2>Top Pemesan</h2>
+    @if (isset($reportData['top_pemesan']) && count($reportData['top_pemesan']) > 0)
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Pemesan</th>
+                    <th>Total Pesanan</th>
+                    <th>Detail Pesanan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($reportData['top_pemesan'] as $pemesan)
+                    <tr>
+                        <td style="vertical-align: top">{{ $pemesan['nama_pemesan'] }}</td>
+                        <td style="vertical-align: top">{{ $pemesan['total_item_pesanan'] }} item</td>
+                        <td style="vertical-align: top">
+                            <ul style="margin-top: 0; padding-left:10px">
+                                @foreach ($pemesan['detail'] as $produk => $jumlah)
+                                    <li>{{ $produk }}: {{ $jumlah }} item</li>
+                                @endforeach
+                            </ul>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <div class="no-data">
+            <p>Tidak ada data top pemesan yang tersedia.</p>
         </div>
     @endif
 </body>

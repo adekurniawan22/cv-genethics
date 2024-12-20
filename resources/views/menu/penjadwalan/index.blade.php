@@ -137,13 +137,31 @@
                                                     </td>
                                                     <!-- Rest of the row content remains the same -->
                                                     <td class="text-center" style="vertical-align: top">
-                                                        <span class="badge bg-info  p-2">
-                                                            {{ $item['tanggal_pengiriman_asli'] }}
-                                                            <br>
-                                                            <em class="d-block mt-2">({{ $item['batas_hari_pengiriman'] }}
-                                                                hari
-                                                                lagi)</em>
-                                                        </span>
+                                                        @if ($item['batas_hari_pengiriman'] == 0)
+                                                            <span class="badge bg-warning p-2">
+                                                                {{ $item['tanggal_pengiriman_asli'] }}
+                                                                <br>
+                                                                <em class="d-block mt-2">(Hari ini)</em>
+                                                            </span>
+                                                        @elseif ($item['batas_hari_pengiriman'] < 0)
+                                                            <span class="badge bg-danger p-2">
+                                                                {{ $item['tanggal_pengiriman_asli'] }}
+                                                                <br>
+                                                                <em class="d-block mt-2">(sudah lewat
+                                                                    {{ abs($item['batas_hari_pengiriman']) }}
+                                                                    <!-- gunakan abs() untuk nilai absolut -->
+                                                                    hari
+                                                                    lagi)</em>
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-info  p-2">
+                                                                {{ $item['tanggal_pengiriman_asli'] }}
+                                                                <br>
+                                                                <em class="d-block mt-2">({{ $item['batas_hari_pengiriman'] }}
+                                                                    hari
+                                                                    lagi)</em>
+                                                            </span>
+                                                        @endif
                                                     </td>
                                                     <td class="text-center" style="vertical-align: top">
                                                         <span class="badge bg-warning p-2">
@@ -241,10 +259,9 @@
 
                                                                 @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date]))
                                                                     @if (count($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details']) > 1)
-                                                                        <ul
-                                                                            style="padding-left: 0;list-style-position: inside;">
+                                                                        <ul style="padding-left: 0;margin-bottom:0;">
                                                                             @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
-                                                                                <li class="mb-1">
+                                                                                <li class="mb-1 mt-1 mx-0 my-0">
                                                                                     <span>
                                                                                         {{ $pesananDetail['jumlah'] }} item
                                                                                         <button

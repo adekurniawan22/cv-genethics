@@ -117,7 +117,13 @@
                         </td>
                         <td style="vertical-align: top;">
                             {{ $item['tanggal_pengiriman_asli'] ?? 'Tanggal Tidak Tersedia' }}<br>
-                            <small>({{ $item['batas_hari_pengiriman'] ?? '0' }} hari lagi)</small>
+                            @if ($item['batas_hari_pengiriman'] == 0)
+                                <small>(hari ini)</small>
+                            @elseif ($item['batas_hari_pengiriman'] < 0)
+                                <small>(sudah lewat {{ abs($item['batas_hari_pengiriman']) }} hari)</small>
+                            @else
+                                <small>({{ $item['batas_hari_pengiriman'] }} hari lagi)</small>
+                            @endif
                         </td>
                         <td style="vertical-align: top;">
                             @if (isset($item['completion_time']))

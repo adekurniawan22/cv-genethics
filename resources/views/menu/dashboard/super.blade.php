@@ -29,6 +29,36 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
+                                <p class="mb-0 text-dark">Jumlah Owner</p>
+                                <h4 class="my-1 text-dark">{{ $totalOwner }}</h4>
+                            </div>
+                            <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card radius-10 bg-purple-gradient">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-dark">Jumlah Manajer</p>
+                                <h4 class="my-1 text-dark">{{ $totalManajer }}</h4>
+                            </div>
+                            <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card radius-10 bg-purple-gradient">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
                                 <p class="mb-0 text-dark">Jumlah Admin</p>
                                 <h4 class="my-1 text-dark">{{ $totalAdmin }}</h4>
                             </div>

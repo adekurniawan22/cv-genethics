@@ -24,37 +24,6 @@
             </div>
         </div>
         <div class="row">
-            @if (session('role') == 'super')
-                <div class="col-xl-3 col-md-6">
-                    <div class="card radius-10 bg-purple-gradient">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div>
-                                    <p class="mb-0 text-dark">Jumlah Owner</p>
-                                    <h4 class="my-1 text-dark">{{ $totalOwner }}</h4>
-                                </div>
-                                <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <div class="card radius-10 bg-purple-gradient">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div>
-                                    <p class="mb-0 text-dark">Jumlah Manajer</p>
-                                    <h4 class="my-1 text-dark">{{ $totalManajer }}</h4>
-                                </div>
-                                <div class="text-dark ms-auto font-35"><i class="bi bi-person-fill"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
             <div class="col-xl-3 col-md-6">
                 <div class="card radius-10 bg-purple-gradient">
                     <div class="card-body">
@@ -120,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-3">
+            <div class="col-xl-3 col-md-6">
                 <div class="card radius-10 bg-purple-gradient">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
@@ -135,50 +104,62 @@
                 </div>
             </div>
 
-            <div class="col-xl-12 col-lg-12 col-md-6">
-                <div class="card radius-10 bg-purple-gradient">
-                    <div
-                        class="card-header bg-gradient bg-info text-white d-flex justify-content-between align-items-center">
-                        <h4 class="card-title mb-0 me-auto">Laporan Penjualan</h4>
-                        <div class="d-flex align-items-center">
-                            <a id="downloadPDF"
-                                href="{{ route(session()->get('role') . '.dashboard.keuangan.pdf-report', ['year' => request('year', now()->year)]) }}"
-                                target="_blank" class="btn btn-success me-2 py-1">
-                                <i class="lni lni-download"></i> Download PDF
-                            </a>
-                            <div style="width: 100px">
-                                <select id="yearSelect" class="form-select py-1 w-100 d-inline-block">
-                                    <!-- Tahun akan diisi secara dinamis -->
-                                </select>
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-xl-3 col-lg-3 col-md-3">
+                        <div class="card radius-10 bg-info">
+                            <div class="card-body" id="topPemesan">
                             </div>
                         </div>
                     </div>
 
-                    <div class="card-body">
-                        <div class="charts-row">
-                            <div class="chart-wrapper">
-                                <div class="chart-container">
-                                    <canvas id="revenueChart"></canvas>
+                    <div class="col-xl-9 col-lg-9 col-md-6">
+                        <div class="card radius-10 bg-purple-gradient">
+                            <div
+                                class="card-header bg-gradient bg-info text-white d-flex justify-content-between align-items-center">
+                                <h4 class="card-title mb-0 me-auto">Laporan Penjualan</h4>
+                                <div class="d-flex align-items-center">
+                                    <a id="downloadPDF"
+                                        href="{{ route(session()->get('role') . '.dashboard.keuangan.pdf-report', ['year' => request('year', now()->year)]) }}"
+                                        target="_blank" class="btn btn-success me-2 py-1">
+                                        <i class="lni lni-download"></i> Download PDF
+                                    </a>
+                                    <div style="width: 100px">
+                                        <select id="yearSelect" class="form-select py-1 w-100 d-inline-block">
+                                            <!-- Tahun akan diisi secara dinamis -->
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="chart-wrapper">
-                                <div id="productChartContainer" class="chart-container">
-                                    <canvas id="productChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="summary">
-                            <div>
-                                <strong>Total Pendapatan:</strong>
-                                <span id="totalRevenue">Rp 0</span>
-                            </div>
-                            <div>
-                                <strong>Bulan Tertinggi:</strong>
-                                <span id="highestMonth">-</span>
+                            <div class="card-body">
+                                <div class="charts-row">
+                                    <div class="chart-wrapper">
+                                        <div class="chart-container">
+                                            <canvas id="revenueChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="chart-wrapper">
+                                        <div id="productChartContainer" class="chart-container">
+                                            <canvas id="productChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="summary">
+                                    <div>
+                                        <strong>Total Pendapatan:</strong>
+                                        <span id="totalRevenue">Rp 0</span>
+                                    </div>
+                                    <div>
+                                        <strong>Bulan Tertinggi:</strong>
+                                        <span id="highestMonth">-</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -190,7 +171,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // Chart configuration
         const base_url = '{{ url('/') }}';
         const role = '{{ session()->get('role') }}';
         let revenueChart = null;
@@ -199,19 +179,15 @@
         const yearSelect = document.getElementById('yearSelect');
         const downloadBtn = document.getElementById('downloadPDF');
 
-        // Update URL download berdasarkan tahun yang dipilih
         function updateDownloadUrl() {
             const year = yearSelect.value || new Date().getFullYear();
             downloadBtn.href = `${base_url}/${role}/dashboard/keuangan/pdf-report?year=${year}`;
         }
 
-        // Event listener untuk update URL saat tahun dipilih
         yearSelect.addEventListener('change', updateDownloadUrl);
 
-        // Update URL saat halaman dimuat
         updateDownloadUrl();
 
-        // Initialize year select options
         function initYearSelect() {
             const currentYear = new Date().getFullYear();
             const yearSelect = document.getElementById('yearSelect');
@@ -235,26 +211,23 @@
             });
         }
 
-        // Fetch and update chart data
         async function fetchChartData(year) {
             try {
                 const response = await fetch(`${base_url}/${role}/dashboard/keuangan/chart-data?year=${year}`);
                 const data = await response.json();
-                console.log(data)
                 updateCharts(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
 
-        // Update charts with new data
         function updateCharts(data) {
             updateRevenueChart(data);
             updateProductChart(data);
             updateSummary(data);
+            tampilkanPemesan(data)
         }
 
-        // Update revenue bar chart
         function updateRevenueChart(data) {
             const ctx = document.getElementById('revenueChart').getContext('2d');
 
@@ -306,7 +279,6 @@
             });
         }
 
-        // Update product pie chart
         function updateProductChart(data) {
             const ctx = document.getElementById('productChart').getContext('2d');
 
@@ -371,7 +343,6 @@
             });
         }
 
-        // Update summary section
         function updateSummary(data) {
             document.getElementById('totalRevenue').textContent =
                 'Rp ' + data.total_annual_revenue.toLocaleString();
@@ -384,45 +355,104 @@
                 `${highestRevenueMonth.month_name} (Rp ${highestRevenueMonth.total_revenue.toLocaleString()})`;
         }
 
-        // Add basic styles
+        function tampilkanPemesan(data) {
+            const container = document.getElementById('topPemesan');
+            container.innerHTML = '';
+
+            const title = document.createElement('h4');
+            title.classList.add('text-white', 'mb-3');
+            title.textContent = "Top Pemesan";
+            container.appendChild(title);
+
+            const topPemesan = data.top_pemesan;
+
+            if (topPemesan && topPemesan.length > 0) {
+                topPemesan.forEach((pemesan, index) => {
+                    const card = document.createElement('div');
+                    card.classList.add('card', 'mb-3');
+
+                    const cardBody = document.createElement('div');
+                    cardBody.classList.add('card-body');
+
+                    card.appendChild(cardBody);
+
+                    const namaPemesan = document.createElement('h6');
+                    namaPemesan.classList.add('text-dark', 'mb-1');
+                    namaPemesan.textContent = pemesan.nama_pemesan;
+                    cardBody.appendChild(namaPemesan);
+
+                    const totalItemPesanan = document.createElement('p');
+                    totalItemPesanan.classList.add('mb-0', 'text-dark');
+                    totalItemPesanan.textContent = `Total Pesanan: ${pemesan.total_item_pesanan} item`;
+                    cardBody.appendChild(totalItemPesanan);
+
+                    const detailPesananLabel = document.createElement('p');
+                    detailPesananLabel.classList.add('mb-0', 'text-dark');
+                    detailPesananLabel.textContent = 'Detail Pesanan:';
+                    cardBody.appendChild(detailPesananLabel);
+
+                    const detailList = document.createElement('ul');
+                    detailList.classList.add('mb-0', 'text-dark');
+                    for (const produk in pemesan.detail) {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${produk}: ${pemesan.detail[produk]}`;
+                        detailList.appendChild(listItem);
+                    }
+                    cardBody.appendChild(detailList);
+
+                    container.appendChild(card);
+
+                    if (index < topPemesan.length - 1) {
+                        const hr = document.createElement('hr');
+                        hr.classList.add('my-3', 'text-light');
+                        container.appendChild(hr);
+                    }
+                });
+            } else {
+                const noDataMessage = document.createElement('p');
+                noDataMessage.classList.add('text-light');
+                noDataMessage.textContent = "Tidak ada top pemesan di tahun ini.";
+                container.appendChild(noDataMessage);
+            }
+        }
+
         const style = document.createElement('style');
         style.textContent = `
-    .chart-container {
-        padding: 15px;
-        margin: 15px 0;
-        height: 400px;
-    }
-    
-    .charts-row {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .chart-wrapper {
-        flex: 1;
-        min-width: 0;
-    }
+            .chart-container {
+                padding: 15px;
+                margin: 15px 0;
+                height: 400px;
+            }
+            
+            .charts-row {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .chart-wrapper {
+                flex: 1;
+                min-width: 0;
+            }
 
-    .summary {
-        display: flex;
-        justify-content: space-around;
-        padding: 15px;
-        margin-top: 15px;
-    }
+            .summary {
+                display: flex;
+                justify-content: space-around;
+                padding: 15px;
+                margin-top: 15px;
+            }
 
-    .summary div {
-        text-align: center;
-    }
+            .summary div {
+                text-align: center;
+            }
 
-    .summary strong {
-        display: block;
-        margin-bottom: 5px;
-    }
-`;
+            .summary strong {
+                display: block;
+                margin-bottom: 5px;
+            }
+        `;
         document.head.appendChild(style);
 
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             initYearSelect();
             fetchChartData(new Date().getFullYear());

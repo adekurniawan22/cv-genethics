@@ -10,6 +10,8 @@ use App\Models\PesananDetail;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class PenjadwalanController extends Controller
 {
@@ -63,8 +65,6 @@ class PenjadwalanController extends Controller
 
         $schedule = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
         $schedule2 = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
-
-
 
         $uniqueDates = [];
         $uniqueProducts = [];
@@ -495,6 +495,7 @@ class PenjadwalanController extends Controller
             $penjadwalan->save();
 
             $schedule[] = [
+                'dateMulai' => Carbon::parse($dateMulai)->format('d F Y'),
                 'pesanan_id' => $order['pesanan_id'],
                 'kode_pesanan' => $order['kode_pesanan'],
                 'products' => $order['products'],
@@ -509,7 +510,7 @@ class PenjadwalanController extends Controller
                     'tanggal' => $latenessDate,
                     'hari' => $latenessDays,
                 ],
-                'penggunaan_mesin' => $machineUsage
+                'penggunaan_mesin' => $machineUsage,
             ];
         }
 

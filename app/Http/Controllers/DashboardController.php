@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Mesin, Penjahit, Pengguna, Pesanan, Produk};
+use App\Models\{Mesin, Pengguna, Pesanan, Produk};
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PesananDetail;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -16,11 +18,11 @@ class DashboardController extends Controller
 
         $totalAdmin = Pengguna::where('role', 'admin')->count();
 
-        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'selesai')
             ->count();
 
-        $totalPesananProsesBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananProsesBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'proses')
             ->count();
 
@@ -34,7 +36,7 @@ class DashboardController extends Controller
             'totalAdmin' => $totalAdmin,
             'totalMesin' => $totalMesin,
             'totalProduk' => $totalProduk,
-            'currentMonthName' => $currentMonthName
+            'currentMonthName' => $currentMonthName,
         ]);
     }
 
@@ -45,11 +47,11 @@ class DashboardController extends Controller
 
         $totalAdmin = Pengguna::where('role', 'admin')->count();
 
-        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'selesai')
             ->count();
 
-        $totalPesananProsesBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananProsesBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'proses')
             ->count();
 
@@ -69,8 +71,22 @@ class DashboardController extends Controller
 
     public function admin()
     {
+        $currentMonth = date('n');
+        $currentMonthName = $this->indonesianMonths[$currentMonth];
+
+        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
+            ->where('status', 'selesai')
+            ->count();
+
+        $totalPesananProsesBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
+            ->where('status', 'proses')
+            ->count();
+
         return view('menu.dashboard.admin', [
             'title' => 'Dashboard Admin',
+            'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
+            'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
+            'currentMonthName' => $currentMonthName,
         ]);
     }
 
@@ -83,18 +99,42 @@ class DashboardController extends Controller
         $totalManajer = Pengguna::where('role', 'manajer')->count();
         $totalOwner = Pengguna::where('role', 'owner')->count();
 
-        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananSelesaiBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'selesai')
             ->count();
 
-        $totalPesananProsesBulanIni = Pesanan::whereMonth('created_at', $currentMonth)
+        $totalPesananProsesBulanIni = Pesanan::whereMonth('tanggal_pesanan', $currentMonth)
             ->where('status', 'proses')
             ->count();
 
         $totalMesin = Mesin::all()->count();
         $totalProduk = Produk::all()->count();
 
-        return view('menu.dashboard.owner', [
+        $topPemesan = Pesanan::select('nama_pemesan', DB::raw('SUM(pesanan_detail.jumlah) as total_item_pesanan'))
+            ->join('pesanan_detail', 'pesanan.pesanan_id', '=', 'pesanan_detail.pesanan_id')
+            ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+            ->where('pesanan.status', 'selesai')
+            ->groupBy('nama_pemesan')
+            ->orderByDesc('total_item_pesanan')
+            ->limit(3)
+            ->get()
+            ->map(function ($pesanan) {
+                $detailProduk = PesananDetail::select('produk.nama_produk', DB::raw('SUM(pesanan_detail.jumlah) as jumlah'))
+                    ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+                    ->whereHas('pesanan', function ($query) use ($pesanan) {
+                        $query->where('nama_pemesan', $pesanan->nama_pemesan);
+                    })
+                    ->groupBy('produk.nama_produk')
+                    ->pluck('jumlah', 'produk.nama_produk');
+
+                return [
+                    'nama_pemesan' => $pesanan->nama_pemesan,
+                    'total_item_pesanan' => $pesanan->total_item_pesanan,
+                    'detail' => $detailProduk,
+                ];
+            });
+
+        return view('menu.dashboard.super', [
             'title' => 'Dashboard Super Admin',
             'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
             'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
@@ -103,7 +143,8 @@ class DashboardController extends Controller
             'totalOwner' => $totalOwner,
             'totalMesin' => $totalMesin,
             'totalProduk' => $totalProduk,
-            'currentMonthName' => $currentMonthName
+            'currentMonthName' => $currentMonthName,
+            'topPemesan' => $topPemesan,
         ]);
     }
 
@@ -148,11 +189,37 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
+        $topPemesan = Pesanan::select('nama_pemesan', DB::raw('SUM(pesanan_detail.jumlah) as total_item_pesanan'))
+            ->join('pesanan_detail', 'pesanan.pesanan_id', '=', 'pesanan_detail.pesanan_id')
+            ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+            ->where('pesanan.status', 'selesai')
+            ->whereYear('tanggal_pesanan', $year)
+            ->groupBy('nama_pemesan')
+            ->orderByDesc('total_item_pesanan')
+            ->limit(3)
+            ->get()
+            ->map(function ($pesanan) {
+                $detailProduk = PesananDetail::select('produk.nama_produk', DB::raw('SUM(pesanan_detail.jumlah) as jumlah'))
+                    ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+                    ->whereHas('pesanan', function ($query) use ($pesanan) {
+                        $query->where('nama_pemesan', $pesanan->nama_pemesan);
+                    })
+                    ->groupBy('produk.nama_produk')
+                    ->pluck('jumlah', 'produk.nama_produk');
+
+                return [
+                    'nama_pemesan' => $pesanan->nama_pemesan,
+                    'total_item_pesanan' => $pesanan->total_item_pesanan,
+                    'detail' => $detailProduk,
+                ];
+            });
+
         $responseData = [
             'year' => $year,
             'monthly_revenues' => $monthlyRevenues,
             'total_annual_revenue' => $monthlyRevenues->sum('total_revenue'),
-            'top_products' => $topProducts
+            'top_products' => $topProducts,
+            'top_pemesan' => $topPemesan,
         ];
 
         return response()->json($responseData);
@@ -160,7 +227,6 @@ class DashboardController extends Controller
 
     public function generatePdfReport(Request $request)
     {
-        // Ambil parameter 'year' dari query string, jika tidak ada, gunakan tahun sekarang
         $year = (int) $request->input('year', Carbon::now()->year);
 
         $orders = Pesanan::with('pesananDetails.produk')
@@ -201,11 +267,37 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
+        $topPemesan = Pesanan::select('nama_pemesan', DB::raw('SUM(pesanan_detail.jumlah) as total_item_pesanan'))
+            ->join('pesanan_detail', 'pesanan.pesanan_id', '=', 'pesanan_detail.pesanan_id')
+            ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+            ->where('pesanan.status', 'selesai')
+            ->whereYear('tanggal_pesanan', $year)
+            ->groupBy('nama_pemesan')
+            ->orderByDesc('total_item_pesanan')
+            ->limit(3)
+            ->get()
+            ->map(function ($pesanan) {
+                $detailProduk = PesananDetail::select('produk.nama_produk', DB::raw('SUM(pesanan_detail.jumlah) as jumlah'))
+                    ->join('produk', 'pesanan_detail.produk_id', '=', 'produk.produk_id')
+                    ->whereHas('pesanan', function ($query) use ($pesanan) {
+                        $query->where('nama_pemesan', $pesanan->nama_pemesan);
+                    })
+                    ->groupBy('produk.nama_produk')
+                    ->pluck('jumlah', 'produk.nama_produk');
+
+                return [
+                    'nama_pemesan' => $pesanan->nama_pemesan,
+                    'total_item_pesanan' => $pesanan->total_item_pesanan,
+                    'detail' => $detailProduk,
+                ];
+            });
+
         $reportData = [
             'year' => $year,
             'monthly_revenues' => $monthlyRevenues,
             'total_annual_revenue' => $monthlyRevenues->sum('total_revenue'),
             'top_products' => $topProducts,
+            'top_pemesan' => $topPemesan,
         ];
 
         $fileName = 'laporan_penjualan_' . $year . '_' . now()->format('Y-m-d') . '.pdf';
