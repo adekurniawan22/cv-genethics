@@ -500,7 +500,7 @@ class PenjadwalanController extends Controller
                 'products' => $order['products'],
                 'channel' => $order['channel'],
                 'tanggal_pengiriman_asli' => $this->formatDateInIndonesian(Carbon::parse($order['tanggal_pengiriman'])),
-                'batas_hari_pengiriman' => Carbon::now()->diffInDays(Carbon::parse($order['tanggal_pengiriman'])),
+                'batas_hari_pengiriman' => Carbon::parse($dateMulai)->diffInDays(Carbon::parse($order['tanggal_pengiriman']), false),
                 'completion_time' => [
                     'tanggal' => $formattedCompletionTime,
                     'hari' => $completionTime,
