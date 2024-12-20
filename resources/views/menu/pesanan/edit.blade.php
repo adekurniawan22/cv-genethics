@@ -36,8 +36,37 @@
                                         <div class="mb-3">
                                             <label for="nama_pemesan" class="form-label">Nama Pemesan</label>
                                             <input type="text" name="nama_pemesan" id="nama_pemesan" class="form-control"
-                                                placeholder="Masukkan nama pemesan" value="{{ $pesanan->nama_pemesan }}">
+                                                placeholder="Masukkan nama pemesan" autocomplete="off"
+                                                value="{{ $pesanan->nama_pemesan }}">
+                                            <style>
+                                                .suggestions-list {
+                                                    position: relative;
+                                                    max-height: 200px;
+                                                    overflow-y: auto;
+                                                    overflow-x: hidden;
+                                                    border: 1px solid #ddd;
+                                                    background-color: #fff;
+                                                    z-index: 999;
+                                                    padding: 5px;
+                                                    box-sizing: border-box;
+                                                    width: 100%;
+                                                    /* Lebar default 100% */
+                                                }
+
+
+                                                .suggestions-list div {
+                                                    padding: 8px;
+                                                    cursor: pointer;
+                                                }
+
+                                                .suggestions-list div:hover {
+                                                    background-color: #f1f1f1;
+                                                }
+                                            </style>
+                                            <div id="pemesanSuggestions" class="suggestions-list" style="display: none;">
+                                            </div>
                                         </div>
+
                                         <div class="mb-3">
                                             <label for="channel" class="form-label">Channel</label>
                                             <select name="channel" id="channel" class="form-select">
@@ -114,7 +143,8 @@
                                                 @foreach ($pesanan->pesananDetails as $detail)
                                                     <tr>
                                                         <td>
-                                                            <select name="produk_id[]" class="form-select produk-select">
+                                                            <select name="produk_id[]"
+                                                                class="form-select produk-select single-select">
                                                                 <option value="">Pilih Produk</option>
                                                                 @foreach ($products as $product)
                                                                     <option value="{{ $product->produk_id }}"
@@ -164,6 +194,43 @@
 
 @section('script')
     <script>
+        const role = '{{ session()->get('role') }}';
+        const base_url = '{{ url('/') }}';
+        const namaPemesanInput = document.getElementById('nama_pemesan');
+        const suggestionsContainer = document.getElementById('pemesanSuggestions');
+
+        async function fetchPemesan(query) {
+            try {
+                const response = await fetch(base_url + '/' + role + '/cari-nama-pemesan?search=' + query);
+                const data = await response.json();
+                return data.pemesan || [];
+            } catch (error) {
+                console.error('Error fetching pemesan data:', error);
+                return [];
+            }
+        }
+
+        function showSuggestions(suggestions) {
+            if (suggestions.length > 0) {
+                suggestionsContainer.innerHTML = suggestions.map(suggestion => `<div>${suggestion}</div>`).join('');
+                suggestionsContainer.style.display = 'block';
+
+                const inputWidth = namaPemesanInput.offsetWidth;
+                suggestionsContainer.style.width = `${inputWidth}px`;
+
+                const suggestionItems = suggestionsContainer.querySelectorAll('div');
+                suggestionItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        namaPemesanInput.value = item
+                            .textContent;
+                        suggestionsContainer.style.display = 'none';
+                    });
+                });
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
+        }
+
         function addErrorMessage(element, message) {
             let errorElement = element.parentNode.querySelector('.invalid-feedback');
             if (!errorElement) {
@@ -182,105 +249,6 @@
                 errorElement.remove();
             }
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const addRowButton = document.getElementById('addRow');
-            const detailPesananBody = document.getElementById('detailPesanan');
-
-
-            addRowButton.addEventListener('click', function() {
-                addNewProductRow();
-                updateProdukOptions();
-                updateRemoveButtons();
-                updateAddRowButton();
-            });
-
-            detailPesananBody.addEventListener('click', function(event) {
-                const clickedElement = event.target;
-                if (clickedElement.classList.contains('removeRow') || clickedElement.tagName
-                    .toLowerCase() === 'i') {
-                    event.stopPropagation();
-                    clickedElement.closest('tr').remove();
-                    updateProdukOptions();
-                    updateRemoveButtons();
-                    updateAddRowButton();
-                }
-            });
-
-            detailPesananBody.addEventListener('change', function(event) {
-                if (event.target.classList.contains('produk-select')) {
-                    updateProdukOptions();
-                    updateAddRowButton();
-                }
-            });
-
-            function addNewProductRow() {
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                <td>
-                    <select name="produk_id[]" class="form-select produk-select" >
-                        <option value="">Pilih Produk</option>
-                        @foreach ($products as $product)
-                            <option value="{{ $product->product_id }}">{{ $product->nama_produk }}</option>
-                        @endforeach
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="jumlah[]" class="form-control jumlah-input" min="1" >
-                </td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger removeRow">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </td>
-            `;
-                detailPesananBody.appendChild(newRow);
-            }
-
-            // Perbaikan pada fungsi updateProdukOptions()
-            function updateProdukOptions() {
-                const selectedProducts = Array.from(detailPesananBody.querySelectorAll('.produk-select'))
-                    .map(select => select.value);
-
-                const produkSelects = detailPesananBody.querySelectorAll('.produk-select');
-                produkSelects.forEach(function(select) {
-                    const selectedValue = select.value;
-                    select.innerHTML = '<option value="">Pilih Produk</option>';
-
-                    @foreach ($products as $product)
-                        if (!selectedProducts.includes('{{ $product->produk_id }}') || selectedValue ===
-                            '{{ $product->produk_id }}') {
-                            const option = document.createElement('option');
-                            option.value = '{{ $product->produk_id }}';
-                            option.textContent = '{{ $product->nama_produk }}';
-                            select.appendChild(option);
-                        }
-                    @endforeach
-
-                    select.value = selectedValue;
-                });
-            }
-
-            function updateRemoveButtons() {
-                const removeButtons = detailPesananBody.querySelectorAll('.removeRow');
-                removeButtons.forEach(function(button) {
-                    button.style.display = removeButtons.length > 1 ? 'inline-block' : 'none';
-                });
-            }
-
-            function updateAddRowButton() {
-                const selectedProducts = Array.from(detailPesananBody.querySelectorAll('.produk-select'))
-                    .map(select => select.value);
-
-                const allProductsSelected = selectedProducts.length === @json($products->count());
-                addRowButton.disabled = allProductsSelected;
-            }
-
-
-            updateProdukOptions();
-            updateRemoveButtons();
-            updateAddRowButton();
-        });
 
         document.getElementById('pesananForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -350,22 +318,15 @@
             });
 
             if (isValid) {
-
                 const csrfToken = document.querySelector('input[name="_token"]').value;
-                // Mendapatkan data produk dari tabel detail pesanan
                 const detailPesananBody = document.getElementById('detailPesanan');
                 const rows = detailPesananBody.querySelectorAll('tr');
                 const produkData = [];
 
-                // Mengiterasi setiap baris di dalam tabel untuk mengumpulkan produk_id dan jumlah
                 rows.forEach(row => {
                     const produkId = row.querySelector('select[name="produk_id[]"]').value;
                     const jumlah = row.querySelector('input[name="jumlah[]"]').value;
 
-                    // Debugging per baris
-                    console.log(`Produk ID: ${produkId}, Jumlah: ${jumlah}`);
-
-                    // Menambahkan data produk hanya jika valid
                     if (produkId && jumlah) {
                         produkData.push({
                             produk_id: produkId,
@@ -374,7 +335,6 @@
                     }
                 });
 
-                // Mengumpulkan data lainnya dari form
                 const formData = new FormData(this);
                 const tanggalPengiriman = formData.get('tanggal_pengiriman');
                 const status = formData.get('status');
@@ -382,7 +342,6 @@
                 const channel = formData.get('channel');
                 const tanggalPesanan = formData.get('tanggal_pesanan');
 
-                // Gabungkan semua data yang akan dikirim
                 const formDataObj = {
                     produkData: produkData,
                     tanggalPengiriman: tanggalPengiriman,
@@ -394,7 +353,6 @@
 
                 const pesanan_id = formData.get('pesanan_id');
 
-                // Mengirim data ke server melalui AJAX menggunakan fetch
                 fetch(`{{ route(session()->get('role') . '.pesanan.update', ':id') }}`.replace(':id',
                         pesanan_id), {
                         method: "PUT",
@@ -408,7 +366,7 @@
                     .then(data => {
                         if (data.success) {
                             window.location.href =
-                                "{{ route(session()->get('role') . '.pesanan.index') }}"; // Session 'success_message' akan tersedia di halaman tujuan
+                                "{{ route(session()->get('role') . '.pesanan.index') }}";
                         } else {
                             alert("Gagal menyimpan data pesanan.");
                         }
@@ -419,6 +377,127 @@
                         alert("Terjadi kesalahan dalam menyimpan data.");
                     });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            namaPemesanInput.addEventListener('input', async function() {
+                const query = namaPemesanInput.value.trim().toLowerCase();
+                if (query.length > 0) {
+                    const pemesanList = await fetchPemesan(query);
+                    showSuggestions(pemesanList);
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            namaPemesanInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    suggestionsContainer.style.display = 'none';
+                }, 200);
+            });
+
+            const addRowButton = document.getElementById('addRow');
+            const detailPesananBody = document.getElementById('detailPesanan');
+
+            addRowButton.addEventListener('click', function() {
+                addNewProductRow();
+                updateProdukOptions();
+                updateRemoveButtons();
+                updateAddRowButton();
+            });
+
+            detailPesananBody.addEventListener('click', function(event) {
+                const clickedElement = event.target;
+                if (clickedElement.classList.contains('removeRow') || clickedElement.tagName
+                    .toLowerCase() === 'i') {
+                    event.stopPropagation();
+                    clickedElement.closest('tr').remove();
+                    updateProdukOptions();
+                    updateRemoveButtons();
+                    updateAddRowButton();
+                }
+            });
+
+            detailPesananBody.addEventListener('change', function(event) {
+                if (event.target.classList.contains('produk-select')) {
+                    updateProdukOptions();
+                    updateAddRowButton();
+                }
+            });
+
+            function addNewProductRow() {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                <td>
+                    <select name="produk_id[]" class="form-select produk-select single-select" >
+                        <option value="">Pilih Produk</option>
+                        @foreach ($products as $product)
+                            <option value="{{ $product->product_id }}">{{ $product->nama_produk }}</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="jumlah[]" class="form-control jumlah-input" min="1" >
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger removeRow">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            `;
+                detailPesananBody.appendChild(newRow);
+                $('.single-select').select2({
+                    theme: 'bootstrap4',
+                    width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ?
+                        '100%' : 'style',
+                    placeholder: $(this).data('placeholder'),
+                    allowClear: Boolean($(this).data('allow-clear')),
+                });
+            }
+
+            // Perbaikan pada fungsi updateProdukOptions()
+            function updateProdukOptions() {
+                const selectedProducts = Array.from(detailPesananBody.querySelectorAll('.produk-select'))
+                    .map(select => select.value);
+
+                const produkSelects = detailPesananBody.querySelectorAll('.produk-select');
+                produkSelects.forEach(function(select) {
+                    const selectedValue = select.value;
+                    select.innerHTML = '<option value="">Pilih Produk</option>';
+
+                    @foreach ($products as $product)
+                        if (!selectedProducts.includes('{{ $product->produk_id }}') || selectedValue ===
+                            '{{ $product->produk_id }}') {
+                            const option = document.createElement('option');
+                            option.value = '{{ $product->produk_id }}';
+                            option.textContent = '{{ $product->nama_produk }}';
+                            select.appendChild(option);
+                        }
+                    @endforeach
+
+                    select.value = selectedValue;
+                });
+            }
+
+            function updateRemoveButtons() {
+                const removeButtons = detailPesananBody.querySelectorAll('.removeRow');
+                removeButtons.forEach(function(button) {
+                    button.style.display = removeButtons.length > 1 ? 'inline-block' : 'none';
+                });
+            }
+
+            function updateAddRowButton() {
+                const selectedProducts = Array.from(detailPesananBody.querySelectorAll('.produk-select'))
+                    .map(select => select.value);
+
+                const allProductsSelected = selectedProducts.length === @json($products->count());
+                addRowButton.disabled = allProductsSelected;
+            }
+
+
+            updateProdukOptions();
+            updateRemoveButtons();
+            updateAddRowButton();
         });
     </script>
 @endsection

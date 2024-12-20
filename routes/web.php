@@ -109,6 +109,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('admin/pesanan/{id}/edit', [PesananController::class, 'edit'])->name('admin.pesanan.edit');
         Route::put('admin/pesanan/{id}', [PesananController::class, 'update'])->name('admin.pesanan.update');
         Route::delete('admin/pesanan/{id}', [PesananController::class, 'destroy'])->name('admin.pesanan.destroy');
+        Route::get('admin/cari-nama-pemesan', [PesananController::class, 'searchNamaPemesan']);
     });
 
     // Routes untuk Super

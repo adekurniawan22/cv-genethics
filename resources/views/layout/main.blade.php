@@ -119,7 +119,8 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="confirmLogoutLabel">Konfirmasi Logout</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         Apakah Anda yakin ingin keluar?
@@ -157,6 +158,8 @@
     <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/lobibox.min.js"></script>
     <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/notifications.min.js"></script>
     <script src="<?= url('assets/onedash') ?>/plugins/notifications/js/notification-custom-script.js"></script>
+    <script src="<?= url('assets/onedash') ?>/plugins/select2/js/select2.min.js"></script>
+    <script src="<?= url('assets/onedash') ?>/js/form-select2.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Notification Success

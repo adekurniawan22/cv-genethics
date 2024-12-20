@@ -164,4 +164,19 @@ class PesananController extends Controller
         Pesanan::findOrFail($id)->delete();
         return redirect()->route(session()->get('role') . '.pesanan.index')->with('success', 'Pesanan berhasil dihapus.');
     }
+
+    public function searchNamaPemesan(Request $request)
+    {
+        $query = $request->input('search');
+
+        if (!$query) {
+            return response()->json(['pemesan' => []]);
+        }
+
+        $pemesanList = Pesanan::where('nama_pemesan', 'like', '%' . $query . '%')
+            ->pluck('nama_pemesan')
+            ->toArray();
+
+        return response()->json(['pemesan' => $pemesanList]);
+    }
 }

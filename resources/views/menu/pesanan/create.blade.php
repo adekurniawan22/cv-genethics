@@ -28,12 +28,40 @@
                                 <form id="pesananForm" action="{{ route(session()->get('role') . '.pesanan.store') }}"
                                     method="POST">
                                     @csrf
-                                    <div class="card-body rounded bg-secondary text-white">
+                                    <div class="card-body rounded " style="background-color: #e9e9e9">
                                         <div class="mb-3">
                                             <label for="nama_pemesan" class="form-label">Nama Pemesan</label>
                                             <input type="text" name="nama_pemesan" id="nama_pemesan" class="form-control"
-                                                placeholder="Masukkan nama pemesan">
+                                                placeholder="Masukkan nama pemesan" autocomplete="off">
+                                            <style>
+                                                .suggestions-list {
+                                                    position: relative;
+                                                    max-height: 200px;
+                                                    overflow-y: auto;
+                                                    overflow-x: hidden;
+                                                    border: 1px solid #ddd;
+                                                    background-color: #fff;
+                                                    z-index: 999;
+                                                    padding: 5px;
+                                                    box-sizing: border-box;
+                                                    width: 100%;
+                                                    /* Lebar default 100% */
+                                                }
+
+
+                                                .suggestions-list div {
+                                                    padding: 8px;
+                                                    cursor: pointer;
+                                                }
+
+                                                .suggestions-list div:hover {
+                                                    background-color: #f1f1f1;
+                                                }
+                                            </style>
+                                            <div id="pemesanSuggestions" class="suggestions-list" style="display: none;">
+                                            </div>
                                         </div>
+
                                         <div class="mb-3">
                                             <label for="channel" class="form-label">Channel</label>
                                             <select name="channel" id="channel" class="form-select">
@@ -71,7 +99,7 @@
                             </div>
 
                             <div class="col-6">
-                                <div class="card-body rounded bg-secondary text-white">
+                                <div class="card-body rounded " style="background-color: #e9e9e9">
                                     <div class="mb-3">
                                         <label class="form-label">Produk</label>
                                         <table class="table table-bordered">
@@ -85,7 +113,8 @@
                                             <tbody id="detailPesanan">
                                                 <tr>
                                                     <td>
-                                                        <select name="produk_id[]" class="form-select produk-select">
+                                                        <select name="produk_id[]"
+                                                            class="form-select produk-select single-select">
                                                             <option value="">Pilih Produk</option>
                                                             @foreach ($products as $product)
                                                                 <option value="{{ $product->id }}">
@@ -131,6 +160,43 @@
 
 @section('script')
     <script>
+        const role = '{{ session()->get('role') }}';
+        const base_url = '{{ url('/') }}';
+        const namaPemesanInput = document.getElementById('nama_pemesan');
+        const suggestionsContainer = document.getElementById('pemesanSuggestions');
+
+        async function fetchPemesan(query) {
+            try {
+                const response = await fetch(base_url + '/' + role + '/cari-nama-pemesan?search=' + query);
+                const data = await response.json();
+                return data.pemesan || [];
+            } catch (error) {
+                console.error('Error fetching pemesan data:', error);
+                return [];
+            }
+        }
+
+        function showSuggestions(suggestions) {
+            if (suggestions.length > 0) {
+                suggestionsContainer.innerHTML = suggestions.map(suggestion => `<div>${suggestion}</div>`).join('');
+                suggestionsContainer.style.display = 'block';
+
+                const inputWidth = namaPemesanInput.offsetWidth;
+                suggestionsContainer.style.width = `${inputWidth}px`;
+
+                const suggestionItems = suggestionsContainer.querySelectorAll('div');
+                suggestionItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        namaPemesanInput.value = item
+                            .textContent;
+                        suggestionsContainer.style.display = 'none';
+                    });
+                });
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
+        }
+
         function addErrorMessage(element, message) {
             let errorElement = element.parentNode.querySelector('.invalid-feedback');
             if (!errorElement) {
@@ -139,22 +205,37 @@
                 element.parentNode.insertBefore(errorElement, element.nextSibling);
             }
             errorElement.textContent = message;
-            errorElement.style.display = 'block'; // Pastikan invalid feedback ditampilkan
+            errorElement.style.display = 'block';
         }
 
         function removeErrorMessage(element) {
             const errorElement = element.parentNode.querySelector('.invalid-feedback');
             if (errorElement) {
-                errorElement.style.display = 'none'; // Atau gunakan kelas CSS yang menyembunyikan elemen
+                errorElement.style.display = 'none';
                 errorElement.remove();
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            namaPemesanInput.addEventListener('input', async function() {
+                const query = namaPemesanInput.value.trim().toLowerCase();
+                if (query.length > 0) {
+                    const pemesanList = await fetchPemesan(query);
+                    showSuggestions(pemesanList);
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            namaPemesanInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    suggestionsContainer.style.display = 'none';
+                }, 200);
+            });
+
             const addRowButton = document.getElementById('addRow');
             const detailPesananBody = document.getElementById('detailPesanan');
 
-            // Tampilkan atau sembunyikan input tanggal pengiriman
             toggleTanggalPengiriman.addEventListener('change', function() {
                 tanggalPengirimanWrapper.style.display = this.checked ? 'block' : 'none';
             });
@@ -189,7 +270,7 @@
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
                     <td>
-                        <select name="produk_id[]" class="form-select produk-select" >
+                        <select name="produk_id[]" class="form-select produk-select single-select" >
                             <option value="">Pilih Produk</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}">{{ $product->nama_produk }}</option>
@@ -206,6 +287,13 @@
                     </td>
                 `;
                 detailPesananBody.appendChild(newRow);
+                $('.single-select').select2({
+                    theme: 'bootstrap4',
+                    width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ?
+                        '100%' : 'style',
+                    placeholder: $(this).data('placeholder'),
+                    allowClear: Boolean($(this).data('allow-clear')),
+                });
             }
 
             function updateProdukOptions() {
