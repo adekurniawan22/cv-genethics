@@ -64,7 +64,10 @@ class PesananController extends Controller
         $lastPesanan = Pesanan::latest('pesanan_id')->first();
         $nextPesananId = $lastPesanan ? $lastPesanan->pesanan_id + 1 : 1;
 
-        $kodePesanan = $request->input('channel') . '-' . $nextPesananId;
+        $formattedTanggalPengiriman = date('dmY', strtotime($request->input('tanggalPesanan')));
+
+        // Buat kode pesanan
+        $kodePesanan = $request->input('channel') . '-' . $formattedTanggalPengiriman . '-' . $nextPesananId;
 
         // Simpan data utama pesanan
         $pesanan = Pesanan::create([

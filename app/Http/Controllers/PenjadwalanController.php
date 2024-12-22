@@ -111,7 +111,8 @@ class PenjadwalanController extends Controller
             ->pluck('keterangan', 'tanggal')
             ->toArray();
 
-        return view('menu.penjadwalan.index', [
+        // return view('menu.penjadwalan.index2', [
+        return view('menu.penjadwalan.index1', [
             'schedule' => $schedule,
             'schedule2' => $schedule2,
             'uniqueDates' => $uniqueDates,
