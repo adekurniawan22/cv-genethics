@@ -55,9 +55,12 @@
 
                         <div class="form-group mb-3">
                             <label class="form-label" for="harga">Harga</label>
-                            <input type="number" id="harga" name="harga"
-                                class="form-control @error('harga') is-invalid @enderror" value="{{ old('harga') }}"
-                                placeholder="Masukkan harga">
+                            <div class="input-group">
+                                <span class="input-group-text">Rp.</span>
+                                <input type="number" id="harga" name="harga"
+                                    class="form-control @error('harga') is-invalid @enderror" value="{{ old('harga') }}"
+                                    placeholder="Masukkan harga" oninput="formatHarga(this)">
+                            </div>
                             @error('harga')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -74,4 +77,19 @@
             </div>
         </div>
     </main>
+@endsection
+
+@section('script')
+    <script>
+        function formatHarga(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            input.value = value;
+        }
+
+        document.querySelector('form').addEventListener('submit', function(event) {
+            var hargaInput = document.getElementById('harga');
+            hargaInput.value = hargaInput.value.replace(/\./g, '');
+        });
+    </script>
 @endsection

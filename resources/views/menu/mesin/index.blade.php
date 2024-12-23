@@ -49,7 +49,7 @@
                                                 {{ ucwords($mesin->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $mesin->keterangan_mesin }}</td>
+                                        <td>{{ $mesin->keterangan_mesin ?? 'Tidak ada' }}</td>
                                         <td>{{ $mesin->kapasitas_per_hari ?? '-' }}</td>
                                         <td>
                                             <div class="d-flex align-items-start justify-content-start gap-3 fs-6">

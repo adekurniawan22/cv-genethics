@@ -43,7 +43,7 @@
                                 @foreach ($data as $produk)
                                     <tr>
                                         <td>{{ $produk->nama_produk }}</td>
-                                        <td>{{ $produk->keterangan_produk }}</td>
+                                        <td>{{ $produk->keterangan_produk ?? 'Tidak ada' }}</td>
                                         <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
                                         <td>
                                             <div class="d-flex align-items-start justify-content-start gap-3 fs-6">
