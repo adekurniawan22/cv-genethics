@@ -63,8 +63,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-
                             </form>
                         </div>
                     </div>
@@ -73,94 +71,98 @@
             <div class="col-10 pe-0">
                 <div class="card radius-10">
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm">
-                                <thead>
+                        <div class="table-responsive my-2 mx-2">
+                            <div class="mt-1"></div>
+                            <style>
+                                #penjadwalan.table-bordered {
+                                    border-collapse: collapse !important;
+                                    /* Pastikan border tidak tumpang tindih */
+                                }
+
+                                #penjadwalan.table-bordered th,
+                                #penjadwalan.table-bordered td {
+                                    border: 0.5px solid #aca9a9;
+                                }
+                            </style>
+                            <table id="penjadwalan" class="table align-middle table-hover table-bordered">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th class="py-3 px-4 bg-dark text-white border-light">Mesin</th>
-                                        <th class="py-3 px-4 bg-dark text-white border-light">Produk</th>
-                                        <th class="py-3 px-4 bg-dark text-white border-light text-center">Total
+                                        <th class="text-center" style="width: 5%">No.</th>
+                                        <th data-sortable="false">Kode Produksi / Item Produksi</th>
+                                        <th class="text-center" style="width: 20%" data-sortable="false">Batas Pengiriman
                                         </th>
-                                        @foreach ($allDates as $date)
-                                            <th class="p-3 bg-dark text-center text-white border-light">
-                                                {{ Carbon\Carbon::parse($date)->locale('id')->translatedFormat('d M Y') }}
-                                            </th>
-                                        @endforeach
+                                        <th class="text-center" style="width: 20%" data-sortable="false">Waktu Mulai
+                                            Produksi</th>
+                                        <th class="text-center" style="width: 20%" data-sortable="false">Waktu Selesai
+                                            Produksi</th>
+                                        <th class="text-center" style="width: 15%" data-sortable="false">Prediksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($schedule as $mesinId => $mesinData)
-                                        <tr>
-                                            <td class="py-3 px-4" rowspan="{{ count($uniqueProducts) + 1 }}">
-                                                {{ $mesinData['nama_mesin'] }}
+                                    @foreach ($schedule as $index => $item)
+                                        <tr class="jadwal-produksi" data-pesanan-id="{{ $item['pesanan_id'] }}"
+                                            style="cursor: pointer;">
+                                            <td class="text-center" style="vertical-align: middle">{{ $index + 1 }}.
+                                            </td>
+                                            <td style="vertical-align: middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="fw-bold">{{ $item['kode_pesanan'] }}-{{ $index + 1 }}
+                                                    </div>
+                                                </div>
+                                                <div style="max-width: 200px;">
+                                                    <ul style="list-style-type: disc;" class="mb-0">
+                                                        @foreach ($item['products'] as $product)
+                                                            <li>{{ $product['nama_produk'] }} ({{ $product['jumlah'] }})
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                            <!-- Rest of the row content remains the same -->
+                                            <td class="text-center" style="vertical-align: middle">
+                                                @if ($item['batas_hari_pengiriman'] == 0)
+                                                    {{ $item['tanggal_pengiriman_asli'] }}
+                                                    <br>
+                                                    <em class="d-block mt-2">(Hari ini)</em>
+                                                @elseif ($item['batas_hari_pengiriman'] < 0)
+                                                    {{ $item['tanggal_pengiriman_asli'] }}
+                                                    <br>
+                                                    <em class="d-block mt-2">(sudah lewat
+                                                        {{ abs($item['batas_hari_pengiriman']) }}
+                                                        hari
+                                                        lagi)</em>
+                                                @else
+                                                    {{ $item['tanggal_pengiriman_asli'] }}
+                                                    <br>
+                                                    <em class="d-block mt-2">({{ $item['batas_hari_pengiriman'] }}
+                                                        hari
+                                                        lagi)</em>
+                                                @endif
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle">
+
+                                                {{ explode(' - ', $item['completion_time']['tanggal'])[0] }}
+
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle">
+                                                @if ($lastDate = array_key_last($item['penggunaan_mesin']))
+                                                    {{ $lastDate }}
+                                                @endif
+                                            </td>
+                                            <td class="text-center" style="vertical-align: middle">
+                                                @if ($item['keterlambatan']['hari'] > 0)
+                                                    <span class="badge bg-danger p-2">
+                                                        Tidak Tepat Waktu
+                                                        <br>
+                                                        <em class="d-block mt-2">(telat
+                                                            {{ $item['keterlambatan']['hari'] }}
+                                                            hari)</em>
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-success p-2">Tepat Waktu</span>
+                                                @endif
                                             </td>
                                         </tr>
-                                        @foreach ($uniqueProducts as $produkId => $produkData)
-                                            <tr>
-                                                <td class="py-3 px-4">{{ $produkData['nama_produk'] }}</td>
-                                                <td class="text-center py-3 px-4">
-                                                    @if (isset($mesinData['produk'][$produkId]))
-                                                        {{ $mesinData['produk'][$produkId]['total_item'] }} item
-                                                    @endif
-                                                </td>
-                                                @foreach ($allDates as $date)
-                                                    <td class="text-center px-3"
-                                                        style="
-                                                        vertical-align: middle;
-                                                            @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date])) background-color: green; color: white;
-                                                            @elseif (array_key_exists(Carbon\Carbon::parse($date)->format('Y-m-d'), $hariLibur)) 
-                                                                background-color: red; color: white; 
-                                                            @elseif (Carbon\Carbon::parse($date)->isSunday()) 
-                                                                background-color: red; color: white;
-                                                            @else 
-                                                                background-color: #f6f6f6; @endif">
-
-                                                        @if (isset($mesinData['produk'][$produkId]['tanggal_produksi'][$date]))
-                                                            @if (count($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details']) > 1)
-                                                                <ul class="list-unstyled mb-0">
-                                                                    @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
-                                                                        <li class="mb-2">
-                                                                            <div
-                                                                                class="d-flex justify-content-center gap-2 align-items-center">
-                                                                                <span>{{ $pesananDetail['jumlah'] }}
-                                                                                    item</span>
-                                                                                <button
-                                                                                    class="btn btn-sm btn-primary jadwal-produksi-mesin"
-                                                                                    data-pesanan-detail-id="{{ $pesananDetail['pesanan_detail_id'] }}">
-                                                                                    Detail
-                                                                                </button>
-                                                                            </div>
-                                                                        </li>
-                                                                    @endforeach
-                                                                </ul>
-                                                            @else
-                                                                <div class="d-flex flex-column">
-                                                                    @foreach ($mesinData['produk'][$produkId]['tanggal_produksi'][$date]['pesanan_details'] as $pesananDetail)
-                                                                        <div
-                                                                            class="d-flex justify-content-center gap-2 align-items-center">
-                                                                            <span>{{ $pesananDetail['jumlah'] }}
-                                                                                item</span>
-                                                                            <button
-                                                                                class="btn btn-sm btn-primary jadwal-produksi-mesin"
-                                                                                data-pesanan-detail-id="{{ $pesananDetail['pesanan_detail_id'] }}">
-                                                                                Detail
-                                                                            </button>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-                                                            @endif
-                                                        @elseif (array_key_exists(Carbon\Carbon::parse($date)->format('Y-m-d'), $hariLibur))
-                                                            {{ $hariLibur[Carbon\Carbon::parse($date)->format('Y-m-d')] }}
-                                                        @elseif (Carbon\Carbon::parse($date)->isSunday())
-                                                            Hari Minggu
-                                                        @else
-                                                            -
-                                                        @endif
-
-                                                    </td>
-                                                @endforeach
-                                            </tr>
-                                        @endforeach
                                     @endforeach
                                 </tbody>
                             </table>
@@ -178,23 +180,6 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="detailModalLabel">Detail Pesanan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="pesananModal" tabindex="-1" aria-labelledby="pesananModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="pesananModalLabel">Detail Pesanan</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -287,88 +272,6 @@
                     const pesananModalBody = document.querySelector('#pesananModal .modal-body');
                     pesananModalBody.innerHTML = '<p>Terjadi kesalahan saat mengambil data.</p>';
                 });
-        }
-
-        function fetchPesananDetailSatu(pesananDetailId) {
-            fetch(`${base_url}/${role}/pesanan/detail/${pesananDetailId}/detail`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Gagal mengambil data');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    let detailHtml = '';
-
-                    if (data) {
-                        const pesanan = data.pesanan || {};
-                        const produk = data.produk || {};
-                        const pengguna = pesanan.pengguna || {};
-                        const jumlah = data.jumlah || 0;
-                        const harga = produk.harga || 0;
-                        const subtotal = jumlah * harga;
-                        const status = pesanan.status.charAt(0).toUpperCase() + pesanan.status.slice(1)
-                            .toLowerCase() || 'Tidak diketahui';
-                        const channel = pesanan.channel || 'Tidak tersedia';
-
-                        detailHtml += `
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Kode Pesanan:</strong> ${pesanan.kode_pesanan || '-'}</p>
-                                        <p><strong>Nama Pemesan:</strong> ${pesanan.nama_pemesan}</p>
-                                        <p><strong>Channel:</strong> ${channel}</p>
-                                        <p><strong>Status:</strong> 
-                                            <span class="badge bg-${status === 'selesai' ? 'success' : 'warning'}">
-                                                ${status}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Dibuat Oleh:</strong> ${pengguna.nama || 'Tidak diketahui'}</p>
-                                        <p><strong>Tanggal Pesanan:</strong> ${formatDateIndonesia(pesanan.tanggal_pesanan || 'N/A')}</p>
-                                        <p><strong>Tanggal Pengiriman:</strong> ${formatDateIndonesia(pesanan.tanggal_pengiriman || 'N/A')}</p>
-                                    </div>
-                                </div>
-                                <hr class="mt-0">
-                                <h5>Detail Pesanan</h5>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Produk</th>
-                                            <th>Jumlah</th>
-                                            <th>Harga</th>
-                                            <th>Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>${produk.nama_produk || 'Tidak tersedia'}</td>
-                                            <td>x ${jumlah}</td>
-                                            <td>Rp ${harga.toLocaleString('id-ID')}</td>
-                                            <td>Rp ${subtotal.toLocaleString('id-ID')}</td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                            <td>Rp ${subtotal.toLocaleString('id-ID')}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            `;
-                    } else {
-                        detailHtml = '<p>Tidak ada detail pesanan.</p>';
-                    }
-
-                    const pesananModalBody = document.querySelector('#pesananModal .modal-body');
-                    pesananModalBody.innerHTML = detailHtml;
-                })
-                .catch(error => {
-                    console.error('Terjadi kesalahan:', error);
-                    const pesananModalBody = document.querySelector('#pesananModal .modal-body');
-                    pesananModalBody.innerHTML = '<p>Terjadi kesalahan saat mengambil data.</p>';
-                });
-
         }
 
         // Fungsi untuk memformat tanggal ke format Indonesia

@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id('penjadwalan_id');
             $table->foreignId('pesanan_id')->constrained('pesanan', 'pesanan_id');
             $table->integer('due_date');
+            $table->string('waktu_mulai');
+            $table->string('waktu_selesai');
             $table->integer('completion_time');
             $table->integer('lateness');
             $table->json('mesin');
