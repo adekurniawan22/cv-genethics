@@ -10,6 +10,8 @@ class HariLibur extends Model
     protected $primaryKey = 'hari_libur_id';
     public $timestamps = false;
 
+    protected $dates = ['tanggal'];
+
     protected $fillable = [
         'tanggal',
         'keterangan',

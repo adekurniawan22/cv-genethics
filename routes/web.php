@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, PenggunaController, DashboardController, MesinController, PenjadwalanController, PesananController, ProdukController, HariLiburController, PesananDetailController};
+use App\Http\Controllers\{AuthController, PenggunaController, DashboardController, PenjadwalanController, PesananController, ProdukController, HariLiburController, PesananDetailController};
 
 // Routes untuk login dan logout
 Route::get('/', [AuthController::class, 'showLogin']);
@@ -51,14 +51,6 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::put('manajer/hari-libur/{id}', [HariLiburController::class, 'update'])->name('manajer.hari_libur.update');
         Route::delete('manajer/hari-libur/{id}', [HariLiburController::class, 'destroy'])->name('manajer.hari_libur.destroy');
 
-        // CRUD Mesin
-        Route::get('manajer/mesin', [MesinController::class, 'index'])->name('manajer.mesin.index');
-        Route::get('manajer/mesin/create', [MesinController::class, 'create'])->name('manajer.mesin.create');
-        Route::post('manajer/mesin', [MesinController::class, 'store'])->name('manajer.mesin.store');
-        Route::get('manajer/mesin/{id}/edit', [MesinController::class, 'edit'])->name('manajer.mesin.edit');
-        Route::put('manajer/mesin/{id}', [MesinController::class, 'update'])->name('manajer.mesin.update');
-        Route::delete('manajer/mesin/{id}', [MesinController::class, 'destroy'])->name('manajer.mesin.destroy');
-
         // CRUD Produk
         Route::get('manajer/produk', [ProdukController::class, 'index'])->name('manajer.produk.index');
         Route::get('manajer/produk/create', [ProdukController::class, 'create'])->name('manajer.produk.create');
@@ -73,6 +65,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/pesanan/detail/{pesananDetail}/detail', [PesananDetailController::class, 'detail'])->name('manajer.pesanan.pesanan_detail');
 
         // List Penjadwalan
+        Route::get('manajer/orders-edd', [PenjadwalanController::class, 'getOrders']);
         Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
             ->name('manajer.penjadwalan.index')
             ->defaults('limit', 50)
@@ -138,14 +131,6 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::put('super/hari-libur/{id}', [HariLiburController::class, 'update'])->name('super.hari_libur.update');
         Route::delete('super/hari-libur/{id}', [HariLiburController::class, 'destroy'])->name('super.hari_libur.destroy');
 
-        // CRUD Mesin
-        Route::get('super/mesin', [MesinController::class, 'index'])->name('super.mesin.index');
-        Route::get('super/mesin/create', [MesinController::class, 'create'])->name('super.mesin.create');
-        Route::post('super/mesin', [MesinController::class, 'store'])->name('super.mesin.store');
-        Route::get('super/mesin/{id}/edit', [MesinController::class, 'edit'])->name('super.mesin.edit');
-        Route::put('super/mesin/{id}', [MesinController::class, 'update'])->name('super.mesin.update');
-        Route::delete('super/mesin/{id}', [MesinController::class, 'destroy'])->name('super.mesin.destroy');
-
         // CRUD Produk
         Route::get('super/produk', [ProdukController::class, 'index'])->name('super.produk.index');
         Route::get('super/produk/create', [ProdukController::class, 'create'])->name('super.produk.create');
@@ -167,6 +152,7 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('super/cari-nama-pemesan', [PesananController::class, 'searchNamaPemesan']);
 
         // List Penjadwalan
+        Route::get('super/orders-edd', [PenjadwalanController::class, 'getOrders']);
         Route::get('super/penjadwalan', [PenjadwalanController::class, 'index'])
             ->name('super.penjadwalan.index')
             ->defaults('limit', 50)

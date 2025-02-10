@@ -45,13 +45,6 @@
                 </a>
             </li>
 
-            <li class="{{ Request::is('manajer/mesin*') ? 'mm-active' : '' }}">
-                <a href="<?= url('manajer/mesin') ?>">
-                    <div class="parent-icon"><i class="bi bi-gear-fill"></i></div>
-                    <div class="menu-title">Mesin</div>
-                </a>
-            </li>
-
             <li class="{{ Request::is('manajer/hari-libur*') ? 'mm-active' : '' }}">
                 <a href="<?= url('manajer/hari-libur') ?>">
                     <div class="parent-icon"><i class="bi bi-calendar-date-fill"></i></div>
@@ -111,13 +104,6 @@
                 <a href="<?= url('super/pengguna') ?>">
                     <div class="parent-icon"><i class="bi bi-people-fill"></i></div>
                     <div class="menu-title">Pengguna</div>
-                </a>
-            </li>
-
-            <li class="{{ Request::is('super/mesin*') ? 'mm-active' : '' }}">
-                <a href="<?= url('super/mesin') ?>">
-                    <div class="parent-icon"><i class="bi bi-gear-fill"></i></div>
-                    <div class="menu-title">Mesin</div>
                 </a>
             </li>
 

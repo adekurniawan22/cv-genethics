@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\HariLibur;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class HariLiburController extends Controller
 {
@@ -21,8 +22,18 @@ class HariLiburController extends Controller
         ]);
     }
 
-    public function getHariLibur()
+    public function getHariLibur(Request $request)
     {
+        if ($request->has('penjadwalan') && $request->boolean('penjadwalan')) {
+            $holidays = HariLibur::select('tanggal', 'keterangan')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [Carbon::parse($item->tanggal)->format('Y-m-d') => $item->keterangan];
+                });
+
+            return response()->json($holidays);
+        }
+
         $hariLibur = HariLibur::all()->map(function ($item) {
             return [
                 'id' => $item->hari_libur_id,

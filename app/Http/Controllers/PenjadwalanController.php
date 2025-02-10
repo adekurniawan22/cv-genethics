@@ -18,110 +18,140 @@ class PenjadwalanController extends Controller
     const TITLE_INDEX = 'Penjadwalan Produksi';
     const TITLE_INDEX_PDF = 'PENJADWALAN PRODUKSI';
 
+    // public function index(Request $request)
+    // {
+    //     $dateMulai = $request->input('date', Carbon::now('Asia/Jakarta')->format('Y-m-d'));
+    //     $limit = $request->input('limit', 50);
+
+    //     $prosesOrders = Pesanan::with(['pesananDetails.produk'])
+    //         ->where('status', 'proses')
+    //         ->take($limit)
+    //         ->get()
+    //         ->map(function ($pesanan) {
+    //             $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
+
+    //             $products = $pesanan->pesananDetails->map(function ($detail) {
+    //                 return [
+    //                     'produk_id' => $detail->produk_id,
+    //                     'nama_produk' => $detail->produk->nama_produk,
+    //                     'jumlah' => $detail->jumlah
+    //                 ];
+    //             });
+
+    //             return [
+    //                 'pesanan_id' => $pesanan->pesanan_id,
+    //                 'channel' => $pesanan->channel,
+    //                 'kode_pesanan' => $pesanan->kode_pesanan,
+    //                 'products' => $products,
+    //                 'total_quantity' => $totalQuantity,
+    //                 'tanggal_pengiriman' => $pesanan->tanggal_pengiriman
+    //             ];
+    //         })
+    //         ->sortBy('tanggal_pengiriman')
+    //         ->values()
+    //         ->all();
+
+    //     $machines = Mesin::where('status', 'aktif')
+    //         ->select('mesin_id', 'nama_mesin', 'kapasitas_per_hari')
+    //         ->get()
+    //         ->map(function ($mesin) {
+    //             return [
+    //                 'mesin_id' => $mesin->mesin_id,
+    //                 'nama_mesin' => $mesin->nama_mesin,
+    //                 'kapasitas_per_hari' => $mesin->kapasitas_per_hari
+    //             ];
+    //         })
+    //         ->all();
+
+    //     $schedule = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
+    //     $schedule2 = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
+
+    //     $uniqueDates = [];
+    //     $uniqueProducts = [];
+    //     foreach ($schedule as $mesinData) {
+    //         foreach ($mesinData['produk'] as $produkData) {
+    //             $uniqueDates = array_merge(
+    //                 $uniqueDates,
+    //                 array_keys($produkData['tanggal_produksi']),
+    //             );
+
+    //             if (!isset($uniqueProducts[$produkData['produk_id']])) {
+    //                 $uniqueProducts[$produkData['produk_id']] = [
+    //                     'nama_produk' => $produkData['nama_produk'],
+    //                     'total_item' => 0
+    //                 ];
+    //             }
+
+    //             $uniqueProducts[$produkData['produk_id']]['total_item'] = $produkData['total_item'];
+    //         }
+    //     }
+
+    //     $uniqueDates = array_unique($uniqueDates);
+    //     $uniqueDatesFormatted = array_map(function ($date) {
+    //         return Carbon::createFromFormat('d F Y', $date)->format('Y-m-d');
+    //     }, $uniqueDates);
+
+    //     sort($uniqueDatesFormatted);
+
+    //     $uniqueDates = array_map(function ($date) {
+    //         return Carbon::parse($date)->format('d F Y');
+    //     }, $uniqueDatesFormatted);
+
+    //     $startDate = Carbon::parse(min($uniqueDatesFormatted));
+    //     $endDate = Carbon::parse(max($uniqueDatesFormatted));
+
+    //     $allDates = [];
+    //     while ($startDate <= $endDate) {
+    //         $allDates[] = $startDate->format('d F Y');
+    //         $startDate->addDay();
+    //     }
+
+    //     $hariLibur = HariLibur::select('tanggal', 'keterangan')
+    //         ->get()
+    //         ->pluck('keterangan', 'tanggal')
+    //         ->toArray();
+
+    //     // return view('menu.penjadwalan.index2', [
+    //     return view('menu.penjadwalan.index1', [
+    //         'schedule' => $schedule,
+    //         'schedule2' => $schedule2,
+    //         'uniqueDates' => $uniqueDates,
+    //         'uniqueProducts' => $uniqueProducts,
+    //         'allDates' => $allDates,
+    //         'hariLibur' => $hariLibur,
+    //         'title' => self::TITLE_INDEX,
+    //         'limit' => $limit
+    //     ]);
+    // }
+
     public function index(Request $request)
     {
-        $dateMulai = $request->input('date', Carbon::now('Asia/Jakarta')->format('Y-m-d'));
-        $limit = $request->input('limit', 50);
+        return view('menu.penjadwalan.tes', [
+            'title' => self::TITLE_INDEX,
+        ]);
+    }
 
-        $prosesOrders = Pesanan::with(['pesananDetails.produk'])
-            ->where('status', 'proses')
-            ->take($limit)
+    public function getOrders()
+    {
+        $orders = Pesanan::with(['pesananDetails.produk'])
+            ->orderBy('tanggal_pesanan', 'desc')
             ->get()
             ->map(function ($pesanan) {
-                $totalQuantity = $pesanan->pesananDetails->sum('jumlah');
-
-                $products = $pesanan->pesananDetails->map(function ($detail) {
-                    return [
-                        'produk_id' => $detail->produk_id,
-                        'nama_produk' => $detail->produk->nama_produk,
-                        'jumlah' => $detail->jumlah
-                    ];
-                });
-
                 return [
-                    'pesanan_id' => $pesanan->pesanan_id,
-                    'channel' => $pesanan->channel,
                     'kode_pesanan' => $pesanan->kode_pesanan,
-                    'products' => $products,
-                    'total_quantity' => $totalQuantity,
-                    'tanggal_pengiriman' => $pesanan->tanggal_pengiriman
+                    'name' => $pesanan->nama_pemesan,
+                    'products' => $pesanan->pesananDetails->map(function ($detail) {
+                        return [
+                            'name' => $detail->produk->nama_produk,
+                            'quantity' => $detail->jumlah
+                        ];
+                    }),
+                    'orderDate' => $pesanan->tanggal_pesanan,
+                    'dueDate' => $pesanan->tanggal_pengiriman,
                 ];
-            })
-            ->sortBy('tanggal_pengiriman')
-            ->values()
-            ->all();
+            });
 
-        $machines = Mesin::where('status', 'aktif')
-            ->select('mesin_id', 'nama_mesin', 'kapasitas_per_hari')
-            ->get()
-            ->map(function ($mesin) {
-                return [
-                    'mesin_id' => $mesin->mesin_id,
-                    'nama_mesin' => $mesin->nama_mesin,
-                    'kapasitas_per_hari' => $mesin->kapasitas_per_hari
-                ];
-            })
-            ->all();
-
-        $schedule = $this->calculateProductionSchedule($limit, $dateMulai, $machines);
-        $schedule2 = $this->calculateProductionSchedule2($prosesOrders, $dateMulai, $machines);
-
-        $uniqueDates = [];
-        $uniqueProducts = [];
-        foreach ($schedule as $mesinData) {
-            foreach ($mesinData['produk'] as $produkData) {
-                $uniqueDates = array_merge(
-                    $uniqueDates,
-                    array_keys($produkData['tanggal_produksi']),
-                );
-
-                if (!isset($uniqueProducts[$produkData['produk_id']])) {
-                    $uniqueProducts[$produkData['produk_id']] = [
-                        'nama_produk' => $produkData['nama_produk'],
-                        'total_item' => 0
-                    ];
-                }
-
-                $uniqueProducts[$produkData['produk_id']]['total_item'] = $produkData['total_item'];
-            }
-        }
-
-        $uniqueDates = array_unique($uniqueDates);
-        $uniqueDatesFormatted = array_map(function ($date) {
-            return Carbon::createFromFormat('d F Y', $date)->format('Y-m-d');
-        }, $uniqueDates);
-
-        sort($uniqueDatesFormatted);
-
-        $uniqueDates = array_map(function ($date) {
-            return Carbon::parse($date)->format('d F Y');
-        }, $uniqueDatesFormatted);
-
-        $startDate = Carbon::parse(min($uniqueDatesFormatted));
-        $endDate = Carbon::parse(max($uniqueDatesFormatted));
-
-        $allDates = [];
-        while ($startDate <= $endDate) {
-            $allDates[] = $startDate->format('d F Y');
-            $startDate->addDay();
-        }
-
-        $hariLibur = HariLibur::select('tanggal', 'keterangan')
-            ->get()
-            ->pluck('keterangan', 'tanggal')
-            ->toArray();
-
-        // return view('menu.penjadwalan.index2', [
-        return view('menu.penjadwalan.index1', [
-            'schedule' => $schedule,
-            'schedule2' => $schedule2,
-            'uniqueDates' => $uniqueDates,
-            'uniqueProducts' => $uniqueProducts,
-            'allDates' => $allDates,
-            'hariLibur' => $hariLibur,
-            'title' => self::TITLE_INDEX,
-            'limit' => $limit
-        ]);
+        return response()->json($orders);
     }
 
     public function downloadPDF(Request $request)
@@ -476,24 +506,24 @@ class PenjadwalanController extends Controller
                 $latenessDays = $completionDateCarbon->diffInDays($dueDate);
             }
 
-            $penjadwalan = new Penjadwalan([
-                'pesanan_id' => $order['pesanan_id'],
-                'due_date' => Carbon::now()->diffInDays(Carbon::parse($order['tanggal_pengiriman'])),
-                'completion_time' => $completionTime,
-                'lateness' => $latenessDays,
-                'mesin' => json_encode(array_reduce(array_keys($machineUsage), function ($result, $date) use ($machineUsage) {
-                    foreach ($machineUsage[$date] as $usage) {
-                        $result[] = [
-                            'date' => $date,
-                            'mesin_id' => $usage['mesin_id'],
-                            'usage' => $usage['kapasitas_terpakai'],
-                        ];
-                    }
-                    return $result;
-                }, []))
+            // $penjadwalan = new Penjadwalan([
+            //     'pesanan_id' => $order['pesanan_id'],
+            //     'due_date' => Carbon::now()->diffInDays(Carbon::parse($order['tanggal_pengiriman'])),
+            //     'completion_time' => $completionTime,
+            //     'lateness' => $latenessDays,
+            //     'mesin' => json_encode(array_reduce(array_keys($machineUsage), function ($result, $date) use ($machineUsage) {
+            //         foreach ($machineUsage[$date] as $usage) {
+            //             $result[] = [
+            //                 'date' => $date,
+            //                 'mesin_id' => $usage['mesin_id'],
+            //                 'usage' => $usage['kapasitas_terpakai'],
+            //             ];
+            //         }
+            //         return $result;
+            //     }, []))
 
-            ]);
-            $penjadwalan->save();
+            // ]);
+            // $penjadwalan->save();
 
             $schedule[] = [
                 'dateMulai' => Carbon::parse($dateMulai)->format('d F Y'),
