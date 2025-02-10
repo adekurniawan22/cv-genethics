@@ -209,7 +209,7 @@
 
         <div class="row ms-0 me-1">
             <div class="ps-0 pe-1 col-2">
-                <div class="card radius-10">
+                <div class="card radius-10 mb-3">
                     <div class="card-body">
                         <div class="align-items-center gap-2 ms-0" style="max-width:500px">
                             <form action="{{ route(session()->get('role') . '.penjadwalan.index') }}" method="GET">
@@ -234,6 +234,27 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card radius-10">
+                    <div class="card-body">
+                        <div class="d-flex flex-column gap-2" style="max-width:500px">
+                            <div class="d-flex align-items-center">
+                                <span class="badge" style="background-color: #007bff;">Print & Press</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge" style="background-color: #28a745;">Cutting</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge" style="background-color: #ffc107; color: black;">Jahit & Obras</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge" style="background-color: #e95d1c;">Finishing</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge" style="background-color: #6c757d;">QC & Packing</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,7 +306,7 @@
         const START_HOUR = 8;
         const END_HOUR = 17;
 
-        let orderData = []; // Definisikan variabel global
+        let orderData = [];
 
 
         document.addEventListener("DOMContentLoaded", async function() {
@@ -298,7 +319,7 @@
                 }
                 HOLIDAYS = await holidaysResponse.json();
 
-                HOLIDAYS['2025-02-10'] = 'ULANG TAHUN';
+                // HOLIDAYS['2025-02-10'] = 'ULANG TAHUN';
 
                 const getUrlParameter = (name) => {
                     const urlParams = new URLSearchParams(window.location.search);
