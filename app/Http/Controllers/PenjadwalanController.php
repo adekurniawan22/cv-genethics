@@ -131,7 +131,29 @@ class PenjadwalanController extends Controller
         ]);
     }
 
-   
+    public function getOrders()
+    {
+        $orders = Pesanan::with(['pesananDetails.produk'])
+            ->orderBy('tanggal_pesanan', 'desc')
+            ->get()
+            ->map(function ($pesanan) {
+                return [
+                    'kode_pesanan' => $pesanan->kode_pesanan,
+                    'name' => $pesanan->nama_pemesan,
+                    'products' => $pesanan->pesananDetails->map(function ($detail) {
+                        return [
+                            'name' => $detail->produk->nama_produk,
+                            'quantity' => $detail->jumlah
+                        ];
+                    }),
+                    'orderDate' => $pesanan->tanggal_pesanan,
+                    'dueDate' => $pesanan->tanggal_pengiriman,
+                ];
+            });
+
+        return response()->json($orders);
+    }
+
     public function downloadPDF(Request $request)
     {
         $dateMulai = $request->input('date', Carbon::now('Asia/Jakarta')->format('Y-m-d'));
