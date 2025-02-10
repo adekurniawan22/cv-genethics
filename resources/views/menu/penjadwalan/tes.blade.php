@@ -137,7 +137,59 @@
             display: block;
             margin-top: -5px;
         }
+
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* HTML: <div class="loader"></div> */
+        .loader {
+            width: 50px;
+            aspect-ratio: 1;
+            display: grid;
+            -webkit-mask: conic-gradient(from 15deg, #0000, #000);
+            animation: l26 1s infinite steps(12);
+        }
+
+        .loader,
+        .loader:before,
+        .loader:after {
+            background:
+                radial-gradient(closest-side at 50% 12.5%,
+                    #f03355 96%, #0000) 50% 0/20% 80% repeat-y,
+                radial-gradient(closest-side at 12.5% 50%,
+                    #f03355 96%, #0000) 0 50%/80% 20% repeat-x;
+        }
+
+        .loader:before,
+        .loader:after {
+            content: "";
+            grid-area: 1/1;
+            transform: rotate(30deg);
+        }
+
+        .loader:after {
+            transform: rotate(60deg);
+        }
+
+        @keyframes l26 {
+            100% {
+                transform: rotate(1turn)
+            }
+        }
     </style>
+    <div id="loader" class="loader-container">
+        <div class="loader"></div>
+    </div>
     <main class="page-content">
         <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3"
             style="height: 37px; overflow: hidden; display: flex; align-items: center;">
@@ -203,7 +255,8 @@
                                         <th>Gantt Chart</th>
                                     </tr>
                                 </thead>
-                                <tbody></tbody>
+                                <tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -234,7 +287,10 @@
 
         let orderData = []; // Definisikan variabel global
 
+
         document.addEventListener("DOMContentLoaded", async function() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'flex';
             try {
                 const holidaysResponse = await fetch(`${base_url}/${role}/get-hari-libur?penjadwalan=true`);
                 if (!holidaysResponse.ok) {
@@ -284,8 +340,6 @@
                     (a, b) => new Date(a.dueDate) - new Date(b.dueDate)
                 );
 
-                console.log("Sorted orders:", sortedOrders);
-
                 // Fungsi untuk menginisialisasi schedule dengan tanggal tertentu
                 const initializeWithDate = (date) => {
                     const scheduleStartTime = new Date(
@@ -317,6 +371,8 @@
 
             } catch (error) {
                 console.error("Error fetching orders:", error);
+            } finally {
+                loader.style.display = 'none';
             }
         });
 
