@@ -10,6 +10,8 @@ class Penjadwalan extends Model
     protected $fillable = [
         'pesanan_id',
         'due_date',
+        'waktu_mulai',
+        'waktu_selesai',
         'completion_time',
         'lateness',
         'mesin'
