@@ -44,20 +44,6 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
-                                <p class="mb-0 text-dark">Jumlah Mesin</p>
-                                <h4 class="my-1 text-dark">{{ $totalMesin }}</h4>
-                            </div>
-                            <div class="text-dark ms-auto font-35"><i class="bi bi-gear-fill"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="card radius-10 bg-purple-gradient">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div>
                                 <p class="mb-0 text-dark">Jumlah Produk</p>
                                 <h4 class="my-1 text-dark">{{ $totalProduk }}</h4>
                             </div>

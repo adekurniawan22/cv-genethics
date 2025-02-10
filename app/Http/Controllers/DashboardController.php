@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Mesin, Pengguna, Pesanan, Produk};
+use App\Models\{Pengguna, Pesanan, Produk};
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -26,7 +26,6 @@ class DashboardController extends Controller
             ->where('status', 'proses')
             ->count();
 
-        $totalMesin = Mesin::all()->count();
         $totalProduk = Produk::all()->count();
 
         return view('menu.dashboard.owner', [
@@ -34,7 +33,6 @@ class DashboardController extends Controller
             'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
             'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
             'totalAdmin' => $totalAdmin,
-            'totalMesin' => $totalMesin,
             'totalProduk' => $totalProduk,
             'currentMonthName' => $currentMonthName,
         ]);
@@ -55,7 +53,6 @@ class DashboardController extends Controller
             ->where('status', 'proses')
             ->count();
 
-        $totalMesin = Mesin::all()->count();
         $totalProduk = Produk::all()->count();
 
         return view('menu.dashboard.manajer', [
@@ -63,7 +60,6 @@ class DashboardController extends Controller
             'totalPesananSelesaiBulanIni' => $totalPesananSelesaiBulanIni,
             'totalPesananProsesBulanIni' => $totalPesananProsesBulanIni,
             'totalAdmin' => $totalAdmin,
-            'totalMesin' => $totalMesin,
             'totalProduk' => $totalProduk,
             'currentMonthName' => $currentMonthName
         ]);
@@ -107,7 +103,6 @@ class DashboardController extends Controller
             ->where('status', 'proses')
             ->count();
 
-        $totalMesin = Mesin::all()->count();
         $totalProduk = Produk::all()->count();
 
         $topPemesan = Pesanan::select('nama_pemesan', DB::raw('SUM(pesanan_detail.jumlah) as total_item_pesanan'))
@@ -141,7 +136,6 @@ class DashboardController extends Controller
             'totalAdmin' => $totalAdmin,
             'totalManajer' => $totalManajer,
             'totalOwner' => $totalOwner,
-            'totalMesin' => $totalMesin,
             'totalProduk' => $totalProduk,
             'currentMonthName' => $currentMonthName,
             'topPemesan' => $topPemesan,
