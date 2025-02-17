@@ -33,6 +33,18 @@ class PesananController extends Controller
         ]);
     }
 
+    public function listProduksi()
+    {
+        // Mengambil pesanan dengan status "selesai"
+        $data = Pesanan::where('status', 'proses')->get();
+
+        return view('menu.list_produksi.index', [
+            'data' => $data,
+            'title' => self::TITLE_INDEX
+        ]);
+    }
+
+
     // Create method (show form for creating new user)
     public function create()
     {

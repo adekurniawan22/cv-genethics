@@ -64,23 +64,13 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::get('manajer/pesanan/{pesanan}/detail', [PesananController::class, 'detail'])->name('manajer.pesanan.detail');
         Route::get('manajer/pesanan/detail/{pesananDetail}/detail', [PesananDetailController::class, 'detail'])->name('manajer.pesanan.pesanan_detail');
 
-        // List Penjadwalan
-        Route::get('manajer/orders-edd', [PenjadwalanController::class, 'getOrders']);
-        Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
-            ->name('manajer.penjadwalan.index')
-            ->defaults('limit', 50)
-            ->where([
-                'limit' => '[0-9]+',
-                'date' => '\d{4}-\d{2}-\d{2}',
-            ]);
+        // List Pesanan Produksi
+        Route::get('manajer/list-produksi', [PesananController::class, 'listProduksi'])
+            ->name('manajer.list_produksi.index');
 
-        Route::get('manajer/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
-            ->name('manajer.penjadwalan.pdf')
-            ->defaults('limit', 50)
-            ->where([
-                'limit' => '[0-9]+',
-                'date' => '\d{4}-\d{2}-\d{2}',
-            ]);
+        // List Penjadwalan
+        Route::get('manajer/penjadwalan', [PenjadwalanController::class, 'index'])
+            ->name('manajer.penjadwalan.index');
 
         // CRUD Hari Libur
         Route::get('manajer/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('manajer.hari_libur.index');
@@ -151,18 +141,14 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::delete('super/pesanan/{id}', [PesananController::class, 'destroy'])->name('super.pesanan.destroy');
         Route::get('super/cari-nama-pemesan', [PesananController::class, 'searchNamaPemesan']);
 
+        // List Pesanan Produksi
+        Route::get('super/list-produksi', [PesananController::class, 'listProduksi'])
+            ->name('super.list_produksi.index');
+
         // List Penjadwalan
-        Route::get('super/orders-edd', [PenjadwalanController::class, 'getOrders']);
         Route::get('super/penjadwalan', [PenjadwalanController::class, 'index'])
             ->name('super.penjadwalan.index');
 
-        Route::get('super/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
-            ->name('super.penjadwalan.pdf')
-            ->defaults('limit', 50)
-            ->where([
-                'limit' => '[0-9]+',
-                'date' => '\d{4}-\d{2}-\d{2}',
-            ]);
 
         // CRUD Hari Libur
         Route::get('super/get-hari-libur', [HariLiburController::class, 'getHariLibur'])->name('super.hari_libur.index');

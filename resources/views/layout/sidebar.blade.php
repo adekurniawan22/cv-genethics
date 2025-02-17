@@ -66,6 +66,13 @@
                 </a>
             </li>
 
+            <li class="{{ Request::is('manajer/list-produksi*') ? 'mm-active' : '' }}">
+                <a href="<?= url('manajer/list-produksi') ?>">
+                    <div class="parent-icon"><i class="bi bi-gear"></i></div> <!-- Ikon mirip pengaturan -->
+                    <div class="menu-title">List Pesanan Produksi</div>
+                </a>
+            </li>
+
             <li class="{{ Request::is('manajer/penjadwalan*') ? 'mm-active' : '' }}">
                 <a href="<?= url('manajer/penjadwalan') ?>">
                     <div class="parent-icon"><i class="bi bi-calendar-week-fill"></i></div>
@@ -125,6 +132,13 @@
                 <a href="<?= url('super/pesanan') ?>">
                     <div class="parent-icon"><i class="bi bi-bag-fill"></i></div>
                     <div class="menu-title">Pesanan</div>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('super/list-produksi*') ? 'mm-active' : '' }}">
+                <a href="<?= url('super/list-produksi') ?>">
+                    <div class="parent-icon"><i class="bi bi-gear"></i></div> <!-- Ikon mirip pengaturan -->
+                    <div class="menu-title">List Pesanan Produksi</div>
                 </a>
             </li>
 

@@ -85,12 +85,12 @@ $(function () {
 
         $("#filter-proses").click(function () {
             var table = $("#id-sembunyi-table").DataTable();
-            table.search("proses").draw();
+            table.column(2).search("proses").draw();
         });
 
         $("#filter-selesai").click(function () {
             var table = $("#id-sembunyi-table").DataTable();
-            table.search("selesai").draw();
+            table.column(2).search("selesai").draw();
         });
     });
 
