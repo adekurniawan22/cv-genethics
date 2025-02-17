@@ -123,10 +123,175 @@ class PenjadwalanController extends Controller
     //     ]);
     // }
 
+    // Bisakah di $processedOrders digroup per kode pesanan, lalu ada juga jumlah berapa hari yg per kode pesanan
+
     public function index(Request $request)
     {
+        $selectedDate = $request->has('date')
+            ? Carbon::parse($request->date)
+            : Carbon::now('Asia/Jakarta');
+
+        // Ambil data pesanan
+        // Modify the orders query and mapping
+        $orders = Pesanan::with(['pesananDetails.produk'])
+            ->orderBy('tanggal_pesanan', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($pesanan) {
+                return [
+                    'kode_pesanan' => $pesanan->kode_pesanan,
+                    'name' => $pesanan->nama_pemesan,
+                    'products' => $pesanan->pesananDetails->map(function ($detail) {
+                        return [
+                            'name' => $detail->produk->nama_produk,
+                            'quantity' => $detail->jumlah
+                        ];
+                    }),
+                    'orderDate' => $pesanan->tanggal_pesanan,
+                    'dueDate' => $pesanan->tanggal_pengiriman,
+                ];
+            })
+            ->sortBy(function ($order) {
+                return Carbon::parse($order['dueDate'])->timestamp;
+            })
+            ->values()
+            ->all();
+
+        // Ambil semua tanggal libur dari database
+        $holidays = HariLibur::pluck('tanggal')->map(function ($date) {
+            return Carbon::parse($date)->format('Y-m-d');
+        })->toArray();
+
+        // Inisialisasi variabel untuk penjadwalan
+        $schedule = [];
+        $currentDate = $selectedDate;
+        $maxItemsPerDay = 100;
+        $processedOrders = [];
+        $scheduleDates = [];
+
+        foreach ($orders as $order) {
+            // Set tanggal awal jika belum ada
+            if ($currentDate === null) {
+                $currentDate = Carbon::parse($order['orderDate']);
+            }
+
+            $orderProducts = [];
+
+            // Proses setiap produk dalam pesanan
+            foreach ($order['products'] as $product) {
+                $remainingItems = $product['quantity'];
+                $tempCurrentDate = clone $currentDate;
+
+                $productData = [
+                    'product_name' => $product['name'],
+                    'total_quantity' => $product['quantity'],
+                    'scheduled_items' => []
+                ];
+
+                while ($remainingItems > 0) {
+                    // Skip hari Minggu dan hari libur
+                    while (
+                        $tempCurrentDate->isSunday() ||
+                        in_array($tempCurrentDate->format('Y-m-d'), $holidays)
+                    ) {
+                        $tempCurrentDate->addDay();
+                    }
+
+                    $dateKey = $tempCurrentDate->format('Y-m-d');
+
+                    // Simpan tanggal dengan jumlah item yang dikerjakan
+                    if (!isset($scheduleDates[$dateKey])) {
+                        $scheduleDates[$dateKey] = [
+                            'date' => $dateKey,
+                            'total_items' => 0,
+                            'is_holiday' => in_array($dateKey, $holidays),
+                            'is_sunday' => Carbon::parse($dateKey)->isSunday()
+                        ];
+                    }
+
+                    // Cek kapasitas yang tersedia
+                    if (!isset($schedule[$dateKey])) {
+                        $schedule[$dateKey] = 0;
+                    }
+
+                    $availableCapacity = $maxItemsPerDay - $schedule[$dateKey];
+                    $itemsToProcess = min($remainingItems, $availableCapacity);
+
+                    if ($itemsToProcess > 0) {
+                        $productData['scheduled_items'][$dateKey] = $itemsToProcess;
+                        $schedule[$dateKey] += $itemsToProcess;
+                        $remainingItems -= $itemsToProcess;
+                        $scheduleDates[$dateKey]['total_items'] += $itemsToProcess;
+                    }
+
+                    $tempCurrentDate->addDay();
+                }
+
+                $orderProducts[] = $productData;
+            }
+
+            $processedOrders[$order['kode_pesanan']] = [
+                'kode_pesanan' => $order['kode_pesanan'],
+                'customer' => $order['name'],
+                'products' => $orderProducts,
+                'start_date' => min(array_merge(...array_map(function ($product) {
+                    return array_keys($product['scheduled_items']);
+                }, $orderProducts))),
+                'end_date' => max(array_merge(...array_map(function ($product) {
+                    return array_keys($product['scheduled_items']);
+                }, $orderProducts)))
+            ];
+        }
+
+        // Temukan tanggal minimal dan maksimal dari semua pesanan
+        $minDate = null;
+        $maxDate = null;
+        foreach ($processedOrders as $order) {
+            if ($minDate === null || $order['start_date'] < $minDate) {
+                $minDate = $order['start_date'];
+            }
+            if ($maxDate === null || $order['end_date'] > $maxDate) {
+                $maxDate = $order['end_date'];
+            }
+        }
+
+        // Buat array tanggal lengkap dari min ke max
+        $completeDates = [];
+        $currentDate = Carbon::parse($minDate);
+        $endDate = Carbon::parse($maxDate);
+
+        while ($currentDate <= $endDate) {
+            $dateKey = $currentDate->format('Y-m-d');
+
+            // Jika tanggal sudah ada di scheduleDates, gunakan data yang ada
+            if (isset($scheduleDates[$dateKey])) {
+                $completeDates[$dateKey] = $scheduleDates[$dateKey];
+            } else {
+                // Jika tidak, buat data baru dengan total_items = 0
+                $isHoliday = in_array($dateKey, $holidays);
+
+                $completeDates[$dateKey] = [
+                    'date' => $dateKey,
+                    'total_items' => 0,
+                    'is_holiday' => $isHoliday,
+                    'holiday_desc' => $isHoliday ? HariLibur::where('tanggal', $dateKey)->first()['keterangan'] : null,
+                    'is_sunday' => $currentDate->isSunday(),
+                ];
+            }
+
+            $currentDate->addDay();
+        }
+
+        // Gunakan complete dates sebagai scheduleDates
+        $scheduleDates = $completeDates;
+        ksort($scheduleDates);
+
+        // dd($processedOrders);
+
         return view('menu.penjadwalan.tes', [
-            'title' => self::TITLE_INDEX,
+            'title' => 'Hasil Penjadwalan',
+            'processedOrders' => $processedOrders,
+            'scheduleDates' => $scheduleDates
         ]);
     }
 

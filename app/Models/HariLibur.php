@@ -16,4 +16,8 @@ class HariLibur extends Model
         'tanggal',
         'keterangan',
     ];
+
+    protected $casts = [
+        'tanggal' => 'date'
+    ];
 }

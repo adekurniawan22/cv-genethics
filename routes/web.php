@@ -154,12 +154,7 @@ Route::middleware(['auth.custom'])->group(function () {
         // List Penjadwalan
         Route::get('super/orders-edd', [PenjadwalanController::class, 'getOrders']);
         Route::get('super/penjadwalan', [PenjadwalanController::class, 'index'])
-            ->name('super.penjadwalan.index')
-            ->defaults('limit', 50)
-            ->where([
-                'limit' => '[0-9]+',
-                'date' => '\d{4}-\d{2}-\d{2}',
-            ]);
+            ->name('super.penjadwalan.index');
 
         Route::get('super/penjadwalan/pdf', [PenjadwalanController::class, 'downloadPDF'])
             ->name('super.penjadwalan.pdf')
