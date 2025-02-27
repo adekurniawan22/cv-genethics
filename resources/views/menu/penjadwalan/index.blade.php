@@ -199,51 +199,51 @@
 
                                                         $assignmentDetails .=
                                                             '
-                            <div class="assignment-date mb-2">
-                                <div class="date-badge px-2 py-1 rounded d-inline-flex align-items-center gap-2" 
-                                     style="background-color: #e9ecef; cursor: pointer; user-select: none; text-align: left;"
-                                     data-bs-toggle="collapse" 
-                                     data-bs-target="#' .
+                                                            <div class="assignment-date mb-2">
+                                                                <div class="date-badge px-2 py-1 rounded d-inline-flex align-items-center gap-2" 
+                                                                    style="background-color: #e9ecef; cursor: pointer; user-select: none; text-align: left;"
+                                                                    data-bs-toggle="collapse" 
+                                                                    data-bs-target="#' .
                                                             $currentCollapseId .
                                                             '" 
-                                     aria-expanded="false" 
-                                     aria-controls="' .
+                                                                    aria-expanded="false" 
+                                                                    aria-controls="' .
                                                             $currentCollapseId .
                                                             '">
-                                    <i class="bx bx-calendar"></i>
-                                    <strong>' .
+                                                                    <i class="bx bx-calendar"></i>
+                                                                    <strong>' .
                                                             $date .
                                                             '</strong>
-                                    <span class="badge bg-primary">' .
+                                                                    <span class="badge bg-primary">' .
                                                             $totalItemsOnDay .
                                                             ' pcs</span>
-                                    <i class="bx bx-chevron-down ms-1"></i>
-                                </div>
-                                
-                                <div class="collapse" id="' .
+                                                                    <i class="bx bx-chevron-down ms-1"></i>
+                                                                </div>
+                                                                
+                                                                <div class="collapse" id="' .
                                                             $currentCollapseId .
                                                             '">
-                                    <div class="assignment-items mt-1 ps-3">';
+                                                                    <div class="assignment-items mt-1 ps-3">';
 
                                                         foreach ($dayAssignments as $assignment) {
                                                             $assignmentDetails .=
                                                                 '
-                                <div class="assignment-item py-1" style="border-left: 3px solid #007bff; padding-left: 8px; margin: 5px 0;">
-                                    <div><i class="bx bx-user"></i> <strong>Pegawai ' .
+                                                                <div class="assignment-item py-1" style="border-left: 3px solid #007bff; padding-left: 8px; margin: 5px 0;">
+                                                                    <div><i class="bx bx-user"></i> <strong>Pegawai ' .
                                                                 $assignment['employee_id'] .
                                                                 '</strong></div>
-                                    <div class="ps-3">Mengerjakan <span class="badge bg-success">' .
+                                                                    <div class="ps-3">Mengerjakan <span class="badge bg-success">' .
                                                                 $assignment['quantity'] .
                                                                 ' pcs</span> menggunakan <span class="badge bg-info">Mesin ' .
                                                                 $assignment['machine_id'] .
                                                                 '</span></div>
-                                </div>';
+                                                                </div>';
                                                         }
 
                                                         $assignmentDetails .= '
-                                    </div>
-                                </div>
-                            </div>';
+                                                                    </div>
+                                                                </div>
+                                                            </div>';
                                                     }
 
                                                     // If no assignments were found
@@ -465,6 +465,7 @@
                                                                                     </thead>
                                                                                     <tbody>
                                                                                         @foreach ($detail['scheduled_items'] as $date => $quantity)
+                                                                                            <?php if($quantity > 0) :?>
                                                                                             <tr>
                                                                                                 <td>{{ $date }}
                                                                                                 </td>
@@ -476,6 +477,7 @@
                                                                                                 <td>{{ $detail['lateness'][$date] ?? '-' }}
                                                                                                 </td>
                                                                                             </tr>
+                                                                                            <?php endif; ?>
                                                                                         @endforeach
                                                                                     </tbody>
                                                                                 </table>
