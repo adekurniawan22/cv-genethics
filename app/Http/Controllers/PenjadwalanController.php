@@ -70,7 +70,13 @@ class PenjadwalanController extends Controller
         $processedOrders = [];
         $scheduleDates = [];
 
+        // Variables for employee and machine assignment
+        $employeeCount = 4; // Number of employees
+        $maxItemsPerEmployee = $maxItemsPerDay / $employeeCount; // Max items per employee per day
+        $employeeAssignments = []; // Track employee assignments
+
         DB::statement('TRUNCATE TABLE penjadwalan');
+
         foreach ($orders as $order) {
             if ($currentDate === null) {
                 $currentDate = Carbon::parse($order['orderDate']);
@@ -92,6 +98,7 @@ class PenjadwalanController extends Controller
                     'scheduled_items' => [],
                     'completion_time' => [],
                     'lateness' => [],
+                    'assignments' => [], // Add assignments array to track employee-machine assignments
                 ];
 
                 while ($remainingItems > 0) {
@@ -102,20 +109,68 @@ class PenjadwalanController extends Controller
                     // Always add the date to scheduled_items, but set to 0 for holidays/sundays
                     if ($isHoliday || $isSunday) {
                         $productData['scheduled_items'][$dateKey] = 0;
+                        $productData['completion_time'][$dateKey] = 0;
+                        $productData['lateness'][$dateKey] = 0;
                     } else {
                         if (!isset($schedule[$dateKey])) {
                             $schedule[$dateKey] = 0;
                         }
 
-                        $availableCapacity = $maxItemsPerDay - $schedule[$dateKey];
-                        $itemsToProcess = min($remainingItems, $availableCapacity);
+                        // Initialize employee assignments for this date if needed
+                        if (!isset($employeeAssignments[$dateKey])) {
+                            $employeeAssignments[$dateKey] = [];
+                            for ($i = 1; $i <= $employeeCount; $i++) {
+                                $employeeAssignments[$dateKey][$i] = 0; // Initialize capacity for each employee
+                            }
+                        }
 
-                        if ($itemsToProcess > 0) {
-                            $productData['scheduled_items'][$dateKey] = $itemsToProcess;
-                            $productData['completion_time'][$dateKey] = floor($itemsToProcess / $maxItemsPerDay * 100) / 100;
-                            $productData['lateness'][$dateKey] = intval(floor((($itemsToProcess / $maxItemsPerDay) * 100) / 1000) - $order['countDueDate']);
-                            $schedule[$dateKey] += $itemsToProcess;
-                            $remainingItems -= $itemsToProcess;
+                        $availableCapacity = $maxItemsPerDay - $schedule[$dateKey];
+                        $itemsProcessedThisDate = 0;
+
+                        // Process items based on employee availability
+                        for ($employeeId = 1; $employeeId <= $employeeCount && $remainingItems > 0; $employeeId++) {
+                            // Skip if this employee has reached their capacity
+                            if ($employeeAssignments[$dateKey][$employeeId] >= $maxItemsPerEmployee) {
+                                continue;
+                            }
+
+                            // Calculate how many items this employee can process
+                            $employeeAvailableCapacity = $maxItemsPerEmployee - $employeeAssignments[$dateKey][$employeeId];
+                            $itemsToProcessByEmployee = min($remainingItems, $employeeAvailableCapacity);
+
+                            if ($itemsToProcessByEmployee > 0) {
+                                // Store the assignment details
+                                if (!isset($productData['assignments'][$dateKey])) {
+                                    $productData['assignments'][$dateKey] = [];
+                                }
+
+                                $productData['assignments'][$dateKey][] = [
+                                    'employee_id' => $employeeId,
+                                    'machine_id' => $employeeId, // Assuming machine ID equals employee ID
+                                    'quantity' => $itemsToProcessByEmployee,
+                                    'order_id' => $order['pesanan_id'],
+                                    'product_name' => $product['name']
+                                ];
+
+                                // Update tracking variables
+                                $employeeAssignments[$dateKey][$employeeId] += $itemsToProcessByEmployee;
+                                $itemsProcessedThisDate += $itemsToProcessByEmployee;
+                                $remainingItems -= $itemsToProcessByEmployee;
+
+                                // Break if all remaining items are processed
+                                if ($remainingItems <= 0) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Update scheduled items for this date
+                        $productData['scheduled_items'][$dateKey] = $itemsProcessedThisDate;
+
+                        if ($itemsProcessedThisDate > 0) {
+                            $productData['completion_time'][$dateKey] = floor($itemsProcessedThisDate / $maxItemsPerDay * 100) / 100;
+                            $productData['lateness'][$dateKey] = intval(floor((($itemsProcessedThisDate / $maxItemsPerDay) * 100) / 1000) - $order['countDueDate']);
+                            $schedule[$dateKey] += $itemsProcessedThisDate;
 
                             if ($productStartDate === null) {
                                 $productStartDate = $dateKey;
@@ -167,7 +222,16 @@ class PenjadwalanController extends Controller
                 'end_date' => max(array_map(function ($product) {
                     return max(array_keys($product['scheduled_items']));
                 }, $orderProducts)),
-                'dueDate' => $order['countDueDate']
+                'dueDate' => $order['countDueDate'],
+                'assignments' => array_reduce($orderProducts, function ($carry, $product) {
+                    foreach ($product['assignments'] ?? [] as $date => $dateAssignments) {
+                        if (!isset($carry[$date])) {
+                            $carry[$date] = [];
+                        }
+                        $carry[$date] = array_merge($carry[$date], $dateAssignments);
+                    }
+                    return $carry;
+                }, [])
             ];
 
             DB::table('penjadwalan')->insert([
@@ -226,13 +290,15 @@ class PenjadwalanController extends Controller
             ->select('penjadwalan.*', 'pesanan.*') // Pilih kolom yang diinginkan
             ->get();
 
-        // dd($processedOrders);
+        // dd($processedOrders, $employeeAssignments, $maxItemsPerEmployee);
 
         return view('menu.penjadwalan.index', [
             'title' => 'Hasil Penjadwalan',
             'processedOrders' => $processedOrders,
             'scheduleDates' => $scheduleDates,
-            'penjadwalan' => $penjadwalan
+            'penjadwalan' => $penjadwalan,
+            'employeeAssignments' => $employeeAssignments,
+            'maxItemsPerEmployee' => $maxItemsPerEmployee
         ]);
     }
 

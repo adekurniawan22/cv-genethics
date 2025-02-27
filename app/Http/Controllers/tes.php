@@ -15,7 +15,9 @@ pegawai 4 mengerjakan 25 item dari pesanan 3 di mesin 4 pada 01 Januari 2024 (su
 pegawai 1 mengerjakan 25 item dari pesanan 3 di mesin 1 pada 02 Januari 2024 (sudah mencapai batas (anggap kapasitas perhari 100) dibagi 4 = 25)
 pegawai 2 mengerjakan 8 item dari pesanan 3 di mesin 2 pada 02 Januari 2024
 
-Ikuti dengan cara menghitung scheduled_items, tetapi bedanya setiap pegawai memiliki batas kapasitas yaitu $maxItemsPerDay/ jumlah_pegawai
+Ikuti dengan cara menghitung scheduled_items, tetapi bedanya setiap pegawai memiliki batas kapasitas yaitu $maxItemsPerDay/jumlah_pegawai
+
+Saya ingin di view ditampilkan dengan di group by kode_pesanan agar lebih mudah ditampilkan
 
 // Controller
 public function index(Request $request)

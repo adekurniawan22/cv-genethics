@@ -124,6 +124,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Kode Produksi</th>
+                                                <th>Pengerjaan</th>
                                                 <th>Total Jumlah</th>
                                                 <th>Detail Produk</th>
                                                 @foreach ($scheduleDates as $date)
@@ -162,6 +163,94 @@
                                                             ' pcs)</li>';
                                                     }
                                                     $productDetails .= '</ul>';
+
+                                                    // Format the employee and machine assignments with collapsible sections
+                                                    $assignmentsByDate = [];
+                                                    if (isset($order['assignments'])) {
+                                                        foreach ($order['assignments'] as $date => $assignments) {
+                                                            $formattedDate = Carbon\Carbon::parse($date)->format(
+                                                                'd/m/Y',
+                                                            );
+                                                            if (!isset($assignmentsByDate[$formattedDate])) {
+                                                                $assignmentsByDate[$formattedDate] = [];
+                                                            }
+
+                                                            foreach ($assignments as $assignment) {
+                                                                $assignmentsByDate[$formattedDate][] = [
+                                                                    'employee_id' => $assignment['employee_id'],
+                                                                    'machine_id' => $assignment['machine_id'],
+                                                                    'quantity' => $assignment['quantity'],
+                                                                ];
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $assignmentDetails = '';
+                                                    $collapseId = 'collapse-' . $order['kode_pesanan'] . '-';
+                                                    $counter = 0;
+
+                                                    foreach ($assignmentsByDate as $date => $dayAssignments) {
+                                                        $currentCollapseId = $collapseId . $counter;
+                                                        $counter++;
+
+                                                        $totalItemsOnDay = array_sum(
+                                                            array_column($dayAssignments, 'quantity'),
+                                                        );
+
+                                                        $assignmentDetails .=
+                                                            '
+                            <div class="assignment-date mb-2">
+                                <div class="date-badge px-2 py-1 rounded d-inline-flex align-items-center gap-2" 
+                                     style="background-color: #e9ecef; cursor: pointer; user-select: none; text-align: left;"
+                                     data-bs-toggle="collapse" 
+                                     data-bs-target="#' .
+                                                            $currentCollapseId .
+                                                            '" 
+                                     aria-expanded="false" 
+                                     aria-controls="' .
+                                                            $currentCollapseId .
+                                                            '">
+                                    <i class="bx bx-calendar"></i>
+                                    <strong>' .
+                                                            $date .
+                                                            '</strong>
+                                    <span class="badge bg-primary">' .
+                                                            $totalItemsOnDay .
+                                                            ' pcs</span>
+                                    <i class="bx bx-chevron-down ms-1"></i>
+                                </div>
+                                
+                                <div class="collapse" id="' .
+                                                            $currentCollapseId .
+                                                            '">
+                                    <div class="assignment-items mt-1 ps-3">';
+
+                                                        foreach ($dayAssignments as $assignment) {
+                                                            $assignmentDetails .=
+                                                                '
+                                <div class="assignment-item py-1" style="border-left: 3px solid #007bff; padding-left: 8px; margin: 5px 0;">
+                                    <div><i class="bx bx-user"></i> <strong>Pegawai ' .
+                                                                $assignment['employee_id'] .
+                                                                '</strong></div>
+                                    <div class="ps-3">Mengerjakan <span class="badge bg-success">' .
+                                                                $assignment['quantity'] .
+                                                                ' pcs</span> menggunakan <span class="badge bg-info">Mesin ' .
+                                                                $assignment['machine_id'] .
+                                                                '</span></div>
+                                </div>';
+                                                        }
+
+                                                        $assignmentDetails .= '
+                                    </div>
+                                </div>
+                            </div>';
+                                                    }
+
+                                                    // If no assignments were found
+                                                    if (empty($assignmentDetails)) {
+                                                        $assignmentDetails =
+                                                            '<div class="text-muted"><i>Belum ada pengerjaan</i></div>';
+                                                    }
 
                                                     // Initialize variables for progress segments
                                                     $progressSegments = [];
@@ -238,9 +327,15 @@
                                                     }
                                                 @endphp
                                                 <tr>
-                                                    <td>{{ $order['kode_pesanan'] }}</td>
-                                                    <td>{{ $orderTotalQuantity }} pcs</td>
-                                                    <td>{!! $productDetails !!}</td>
+                                                    <td class="align-middle">
+                                                        <span class="badge bg-dark">{{ $order['kode_pesanan'] }}</span>
+                                                    </td>
+                                                    <td class="align-middle" style="min-width: 250px">
+                                                        {!! $assignmentDetails !!}</td>
+                                                    <td class="align-middle">
+                                                        <span class="badge bg-success">{{ $orderTotalQuantity }} pcs</span>
+                                                    </td>
+                                                    <td class="align-middle">{!! $productDetails !!}</td>
 
                                                     @foreach ($beforeCells as $date)
                                                         <td
@@ -298,7 +393,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td colspan="3" style="font-weight:bold">Jumlah di produksi</td>
+                                                <td colspan="4" style="font-weight:bold">Jumlah di produksi</td>
                                                 @foreach ($scheduleDates as $date)
                                                     <td
                                                         style="{{ $date['is_holiday'] || $date['is_sunday'] ? 'background-color: #f8d7da; color: #721c24;' : '' }}font-weight:bold">
@@ -398,8 +493,6 @@
                                 </div>
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
@@ -413,6 +506,16 @@
             document.getElementById('submitBtn').addEventListener('click', function() {
                 const form = this.closest('form');
                 form.submit();
+            });
+
+            // Toggle chevron icon when collapsible items are clicked
+            $('.date-badge').on('click', function() {
+                const icon = $(this).find('.bx-chevron-down, .bx-chevron-up');
+                if (icon.hasClass('bx-chevron-down')) {
+                    icon.removeClass('bx-chevron-down').addClass('bx-chevron-up');
+                } else {
+                    icon.removeClass('bx-chevron-up').addClass('bx-chevron-down');
+                }
             });
         });
     </script>
