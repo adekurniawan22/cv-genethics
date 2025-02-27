@@ -346,8 +346,7 @@
 
                                                     @foreach ($progressSegments as $index => $segment)
                                                         <td colspan="{{ $segment['count'] }}">
-                                                            <div
-                                                                style="{{ $date['is_holiday'] || $date['is_sunday'] ? 'background-color: #f8d7da;' : '' }} padding-top: 0.25rem; padding-bottom: 0.25rem;">
+                                                            <div style="padding-top: 0.25rem; padding-bottom: 0.25rem;">
                                                                 <div class="d-flex flex-column" style="height: 100px;">
                                                                     @php
                                                                         $currentProgress = $segment['startPercentage'];
