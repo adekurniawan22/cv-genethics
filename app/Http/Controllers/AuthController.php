@@ -78,9 +78,9 @@ class AuthController extends Controller
         if ($role == 'owner') {
             return redirect()->route(session()->get('role') . '.dashboard')->with('success', 'Selamat datang di menu Owner');
         } elseif ($role == 'manajer') {
-            return redirect()->route('manajer.dashboard')->with('success', 'Selamat datang di menu Manajer');
+            return redirect()->route('manajer.penjadwalan.index')->with('success', 'Selamat datang di menu Manajer');
         } elseif ($role == 'admin') {
-            return redirect()->route('admin.dashboard')->with('success', 'Selamat datang di menu Admin');
+            return redirect()->route('admin.pesanan.index')->with('success', 'Selamat datang di menu Admin');
         } elseif ($role == 'super') {
             return redirect()->route('super.dashboard')->with('success', 'Selamat datang di menu Super Admin');
         } else {

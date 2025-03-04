@@ -38,12 +38,12 @@
 
         {{-- Role Manajer --}}
         @if (session('role') == 'manajer')
-            <li class="{{ Request::is('manajer/dashboard*') ? 'mm-active' : '' }}">
-                <a href="<?= url('manajer/dashboard') ?>">
-                    <div class="parent-icon"><i class="bi bi-speedometer2"></i></div>
-                    <div class="menu-title">Dashboard</div>
-                </a>
-            </li>
+            <!--<li class="{{ Request::is('manajer/dashboard*') ? 'mm-active' : '' }}">-->
+            <!--    <a href="<?= url('manajer/dashboard') ?>">-->
+            <!--        <div class="parent-icon"><i class="bi bi-speedometer2"></i></div>-->
+            <!--        <div class="menu-title">Dashboard</div>-->
+            <!--    </a>-->
+            <!--</li>-->
 
             <li class="{{ Request::is('manajer/hari-libur*') ? 'mm-active' : '' }}">
                 <a href="<?= url('manajer/hari-libur') ?>">
@@ -83,12 +83,12 @@
 
         {{-- Role Admin --}}
         @if (session('role') == 'admin')
-            <li class="{{ Request::is('admin/dashboard*') ? 'mm-active' : '' }}">
-                <a href="<?= url('admin/dashboard') ?>">
-                    <div class="parent-icon"><i class="bi bi-speedometer2"></i></div>
-                    <div class="menu-title">Dashboard</div>
-                </a>
-            </li>
+            <!--<li class="{{ Request::is('admin/dashboard*') ? 'mm-active' : '' }}">-->
+            <!--    <a href="<?= url('admin/dashboard') ?>">-->
+            <!--        <div class="parent-icon"><i class="bi bi-speedometer2"></i></div>-->
+            <!--        <div class="menu-title">Dashboard</div>-->
+            <!--    </a>-->
+            <!--</li>-->
 
             <li class="{{ Request::is('admin/pesanan*') ? 'mm-active' : '' }}">
                 <a href="<?= url('admin/pesanan') ?>">
